@@ -3,12 +3,17 @@ import {
   App, Badge, Button, Card, Descriptions, Drawer, Form, Input, InputNumber, Modal, Popconfirm, Select, Skeleton, Space,
   Table, Tabs, Tag, Typography,
 } from 'antd';
+import { DownloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 import { EnumTag } from '../../components/EnumTag';
 import { FileButton } from '../../components/FileLink';
+import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
+import { downloadCsv, fetchAll } from '../../lib/export';
 import { fmtDateTime, fmtMoney, fmtSigned } from '../../lib/format';
+import { printInvoice } from '../../lib/printInvoice';
+import { useOpenParam, useTabParam } from '../../lib/useOpenParam';
 import {
   HANDOVER_STATUS, PAYMENT_METHOD, PAYMENT_STATUS, type HandoverStatus, type PaymentMethod, type PaymentStatus,
 } from '../../lib/labels';
@@ -55,9 +60,13 @@ export function BillingPage() {
     enabled: can('custody.read'),
   });
 
+  const [tab, setTab] = useTabParam('invoices');
+
   return (
-    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>الفواتير والتحصيل</Typography.Title>}>
-      <Tabs items={[
+    <>
+    <PageHeader title="الفواتير والتحصيل" subtitle="الفواتير الصادرة، مراجعة التحويلات، وعهدة الفنيين النقدية" />
+    <Card>
+      <Tabs activeKey={tab} onChange={setTab} items={[
         { key: 'invoices', label: 'الفواتير', children: <InvoicesTab /> },
         ...(can('payment.read') ? [{
           key: 'transfers',
@@ -74,13 +83,37 @@ export function BillingPage() {
         ] : []),
       ]} />
     </Card>
+    </>
   );
 }
 
 function InvoicesTab() {
+  const { message } = App.useApp();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<{ search?: string; status?: string }>({});
-  const [openId, setOpenId] = useState<number | null>(null);
+  const [openId, setOpenId] = useOpenParam();
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const rows = await fetchAll<InvoiceRow>('/invoices', filters);
+      downloadCsv('invoices', [
+        { title: 'رقم الفاتورة', value: (r) => r.number },
+        { title: 'التاريخ', value: (r) => fmtDateTime(r.issuedAt) },
+        { title: 'العميل', value: (r) => r.customer.name },
+        { title: 'الموبايل', value: (r) => r.customer.phone },
+        { title: 'الزيارة', value: (r) => r.serviceRequest?.number },
+        { title: 'الفني', value: (r) => r.technician?.user.name },
+        { title: 'الإجمالي', value: (r) => Number(r.total) },
+        { title: 'الدفع', value: (r) => r.payments.map((p) => `${PAYMENT_METHOD[p.method].label} (${PAYMENT_STATUS[p.status].label})`).join(' + ') },
+        { title: 'الحالة', value: (r) => (r.status === 'VOID' ? 'ملغاة' : 'صادرة') },
+      ], rows);
+    } catch (e) {
+      message.error(errorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  };
   const { data, isFetching } = useQuery({
     queryKey: ['invoices', filters, page],
     queryFn: async () =>
@@ -97,7 +130,10 @@ function InvoicesTab() {
             options={[{ value: 'ISSUED', label: 'صادرة' }, { value: 'VOID', label: 'ملغاة' }]}
             onChange={(v) => { setFilters((f) => ({ ...f, status: v })); setPage(1); }} />
         </Space>
-        <Typography.Text>إجمالي الفواتير الصادرة: <Typography.Text strong>{fmtMoney(data?.totalAmount)}</Typography.Text></Typography.Text>
+        <Space wrap>
+          <Typography.Text>إجمالي الفواتير الصادرة: <Typography.Text strong>{fmtMoney(data?.totalAmount)}</Typography.Text></Typography.Text>
+          <Button icon={<DownloadOutlined />} loading={exporting} onClick={exportCsv}>تصدير Excel</Button>
+        </Space>
       </Space>
       <Table<InvoiceRow>
         rowKey="id"
@@ -150,7 +186,14 @@ function InvoiceDrawer({ id, onClose }: { id: number | null; onClose: () => void
   return (
     <Drawer open={id != null} onClose={onClose} size={640}
       title={inv ? <Space>{inv.number}{inv.status === 'VOID' ? <Tag color="red">ملغاة</Tag> : <Tag color="green">صادرة</Tag>}</Space> : 'الفاتورة'}
-      extra={inv?.status === 'ISSUED' && can('invoice.void') && (
+      extra={inv && (
+        <Space>
+        <Button icon={<PrinterOutlined />} onClick={async () => {
+          if (!(await printInvoice(inv, (m) => PAYMENT_METHOD[m as PaymentMethod]?.label ?? m))) {
+            message.warning('اسمح بفتح النوافذ المنبثقة للطباعة');
+          }
+        }}>طباعة</Button>
+        {inv.status === 'ISSUED' && can('invoice.void') && (
         <Popconfirm
           title="إلغاء الفاتورة"
           description={
@@ -165,6 +208,8 @@ function InvoiceDrawer({ id, onClose }: { id: number | null; onClose: () => void
         >
           <Button danger>إلغاء الفاتورة</Button>
         </Popconfirm>
+        )}
+        </Space>
       )}
     >
       {isLoading || !inv ? <Skeleton active /> : (

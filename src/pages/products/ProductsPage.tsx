@@ -7,6 +7,8 @@ import {
 import { useState } from 'react';
 import { EnumTag } from '../../components/EnumTag';
 import { ImageUploader } from '../../components/ImageUploader';
+import { PageHeader } from '../../components/PageHeader';
+import { useTabParam } from '../../lib/useOpenParam';
 import { api, errorMessage, type Page } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtMoney } from '../../lib/format';
@@ -14,13 +16,17 @@ import { PRODUCT_TYPE, options, type ProductType } from '../../lib/labels';
 import type { Category, ProductRow } from './types';
 
 export function ProductsPage() {
+  const [tab, setTab] = useTabParam('products');
   return (
-    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>المنتجات</Typography.Title>}>
-      <Tabs items={[
+    <>
+    <PageHeader title="المنتجات" subtitle="الأجهزة والشمعات وقطع الغيار المعروضة في المتجر وفواتير الفنيين" />
+    <Card>
+      <Tabs activeKey={tab} onChange={setTab} items={[
         { key: 'products', label: 'المنتجات', children: <ProductsTab /> },
         { key: 'categories', label: 'الفئات', children: <CategoriesTab /> },
       ]} />
     </Card>
+    </>
   );
 }
 

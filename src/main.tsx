@@ -3,28 +3,31 @@ import { App as AntApp, ConfigProvider } from 'antd';
 import arEG from 'antd/locale/ar_EG';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
-import { StrictMode } from 'react';
+import { StrictMode, lazy, type ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AdminLayout } from './layout/AdminLayout';
 import { AuthProvider } from './lib/auth';
-import { NAV } from './navigation';
-import { BillingPage } from './pages/billing/BillingPage';
-import { CustomerDetailPage } from './pages/customers/CustomerDetailPage';
-import { InventoryPage } from './pages/inventory/InventoryPage';
-import { LeadsPage } from './pages/leads/LeadsPage';
-import { OrdersPage } from './pages/orders/OrdersPage';
-import { ReportsPage } from './pages/reports/ReportsPage';
-import { CustomersPage } from './pages/customers/CustomersPage';
-import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
-import { Placeholder } from './pages/Placeholder';
-import { ProductsPage } from './pages/products/ProductsPage';
-import { ServiceRequestsPage } from './pages/service-requests/ServiceRequestsPage';
-import { UsersPage } from './pages/settings/UsersPage';
-import { TechniciansPage } from './pages/technicians/TechniciansPage';
 import { theme } from './theme';
 import './index.css';
+
+// Each page is its own chunk, so the first load only pulls the layout and the current page.
+const page = <P,>(load: () => Promise<ComponentType<P>>) => lazy(async () => ({ default: await load() }));
+
+const HomePage = page(async () => (await import('./pages/HomePage')).HomePage);
+const ServiceRequestsPage = page(async () => (await import('./pages/service-requests/ServiceRequestsPage')).ServiceRequestsPage);
+const CustomersPage = page(async () => (await import('./pages/customers/CustomersPage')).CustomersPage);
+const CustomerDetailPage = page(async () => (await import('./pages/customers/CustomerDetailPage')).CustomerDetailPage);
+const TechniciansPage = page(async () => (await import('./pages/technicians/TechniciansPage')).TechniciansPage);
+const TechnicianDetailPage = page(async () => (await import('./pages/technicians/TechnicianDetailPage')).TechnicianDetailPage);
+const ProductsPage = page(async () => (await import('./pages/products/ProductsPage')).ProductsPage);
+const InventoryPage = page(async () => (await import('./pages/inventory/InventoryPage')).InventoryPage);
+const BillingPage = page(async () => (await import('./pages/billing/BillingPage')).BillingPage);
+const LeadsPage = page(async () => (await import('./pages/leads/LeadsPage')).LeadsPage);
+const OrdersPage = page(async () => (await import('./pages/orders/OrdersPage')).OrdersPage);
+const ReportsPage = page(async () => (await import('./pages/reports/ReportsPage')).ReportsPage);
+const SettingsPage = page(async () => (await import('./pages/settings/SettingsPage')).SettingsPage);
 
 dayjs.locale('ar');
 const queryClient = new QueryClient({
@@ -47,16 +50,14 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="customers" element={<CustomersPage />} />
                   <Route path="customers/:id" element={<CustomerDetailPage />} />
                   <Route path="technicians" element={<TechniciansPage />} />
+                  <Route path="technicians/:id" element={<TechnicianDetailPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="inventory" element={<InventoryPage />} />
                   <Route path="invoices" element={<BillingPage />} />
                   <Route path="leads" element={<LeadsPage />} />
                   <Route path="orders" element={<OrdersPage />} />
                   <Route path="reports" element={<ReportsPage />} />
-                  <Route path="settings" element={<UsersPage />} />
-                  {NAV.filter((n) => n.soon).map((n) => (
-                    <Route key={n.path} path={n.path.slice(1)} element={<Placeholder title={n.label} />} />
-                  ))}
+                  <Route path="settings" element={<SettingsPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
               </Routes>

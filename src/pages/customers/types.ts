@@ -46,6 +46,12 @@ export interface CustomerDetail {
     status: 'ACTIVE' | 'INACTIVE' | 'REPLACED';
     addressId: number | null;
     product: { id: number; nameAr: string; sku: string } | null;
+    cartridges: { id: number; stage: number; installedAt: string; nextDueAt: string | null; product: { nameAr: string } | null }[];
+  }[];
+  orders: { id: number; number: string; status: string; total: string; createdAt: string }[];
+  invoices: {
+    id: number; number: string; status: 'ISSUED' | 'VOID'; total: string; issuedAt: string;
+    serviceRequestId: number | null; orderId: number | null;
   }[];
   serviceRequests: {
     id: number;

@@ -1,21 +1,19 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  App, Button, Card, Col, Descriptions, Drawer, Input, Popconfirm, Row, Select, Skeleton, Space, Statistic, Table, Tag,
+  App, Badge, Button, Card, Col, Descriptions, Drawer, Input, Popconfirm, Row, Select, Skeleton, Space, Statistic, Table, Tag,
   Timeline, Typography,
 } from 'antd';
+import { DownloadOutlined } from '@ant-design/icons';
 import { useState } from 'react';
+import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage, type Page } from '../../lib/api';
+import { downloadCsv, fetchAll } from '../../lib/export';
+import { ORDER_STATUS, type OrderStatus } from '../../lib/labels';
+import { useOpenParam } from '../../lib/useOpenParam';
 import { useAuth } from '../../lib/auth';
 import { fmtAddress, fmtDateTime, fmtMoney } from '../../lib/format';
 
-type OrderStatus = 'NEW' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
-const STATUS: Record<OrderStatus, { label: string; color: string }> = {
-  NEW: { label: 'جديد', color: 'blue' },
-  PREPARING: { label: 'قيد التجهيز', color: 'gold' },
-  OUT_FOR_DELIVERY: { label: 'خرج للتوصيل', color: 'cyan' },
-  DELIVERED: { label: 'تم التسليم', color: 'green' },
-  CANCELLED: { label: 'ملغي', color: 'red' },
-};
+const STATUS = ORDER_STATUS;
 const NEXT: Record<OrderStatus, { to: OrderStatus; label: string }[]> = {
   NEW: [{ to: 'PREPARING', label: 'بدء التجهيز' }],
   PREPARING: [{ to: 'OUT_FOR_DELIVERY', label: 'خرج للتوصيل (خصم من المخزن)' }],
@@ -41,7 +39,9 @@ interface OrderDetail extends Omit<OrderRow, 'address' | '_count'> {
 export function OrdersPage() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<{ status?: OrderStatus; search?: string }>({});
-  const [openId, setOpenId] = useState<number | null>(null);
+  const { message } = App.useApp();
+  const [openId, setOpenId] = useOpenParam();
+  const [exporting, setExporting] = useState(false);
   const { data, isFetching } = useQuery({
     queryKey: ['orders', filters, page],
     queryFn: async () =>
@@ -49,28 +49,68 @@ export function OrdersPage() {
     placeholderData: keepPreviousData,
   });
 
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const rows = await fetchAll<OrderRow>('/orders', filters);
+      downloadCsv('orders', [
+        { title: 'رقم الطلب', value: (o) => o.number },
+        { title: 'التاريخ', value: (o) => fmtDateTime(o.createdAt) },
+        { title: 'العميل', value: (o) => o.customer.name },
+        { title: 'الموبايل', value: (o) => o.customer.phone },
+        { title: 'المدينة', value: (o) => o.address.city },
+        { title: 'المنطقة', value: (o) => o.address.area },
+        { title: 'عدد الأصناف', value: (o) => o._count.items },
+        { title: 'الإجمالي', value: (o) => Number(o.total) },
+        { title: 'الحالة', value: (o) => STATUS[o.status].label },
+      ], rows);
+    } catch (e) {
+      message.error(errorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  };
+  const setStatus = (v?: OrderStatus) => { setFilters((f) => ({ ...f, status: v })); setPage(1); };
+
   return (
-    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>طلبات الشراء</Typography.Title>}>
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        {(Object.keys(STATUS) as OrderStatus[]).map((s) => (
-          <Col key={s} xs={12} md={4}>
-            <Statistic title={STATUS[s].label} value={data?.byStatus[s] ?? 0} />
+    <>
+    <PageHeader
+      title="طلبات المتجر"
+      subtitle="طلبات الشراء من تطبيق العميل: التجهيز، التوصيل والتحصيل"
+      actions={<Button icon={<DownloadOutlined />} loading={exporting} onClick={exportCsv}>تصدير Excel</Button>}
+    />
+    <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+      {(Object.keys(STATUS) as OrderStatus[]).map((s) => {
+        const active = filters.status === s;
+        return (
+          <Col key={s} xs={12} sm={8} lg={{ flex: '20%' }}>
+            <Card
+              hoverable
+              onClick={() => setStatus(active ? undefined : s)}
+              styles={{ body: { padding: 14 } }}
+              style={active ? { borderColor: '#2E508F', boxShadow: '0 0 0 1px #2E508F' } : undefined}
+            >
+              <Statistic title={<Space size={6}><Badge color={STATUS[s].color} />{STATUS[s].label}</Space>} value={data?.byStatus[s] ?? 0} />
+            </Card>
           </Col>
-        ))}
-      </Row>
-      <Space wrap style={{ marginBottom: 16 }}>
+        );
+      })}
+    </Row>
+    <Card className="table-card">
+      <Space wrap className="table-toolbar" style={{ display: 'flex' }}>
         <Input.Search placeholder="رقم الطلب، اسم أو موبايل العميل" allowClear style={{ width: 280 }}
           onSearch={(v) => { setFilters((f) => ({ ...f, search: v || undefined })); setPage(1); }} />
-        <Select allowClear placeholder="الحالة" style={{ width: 160 }}
+        <Select allowClear placeholder="الحالة" style={{ width: 160 }} value={filters.status}
           options={(Object.keys(STATUS) as OrderStatus[]).map((s) => ({ value: s, label: STATUS[s].label }))}
-          onChange={(v) => { setFilters((f) => ({ ...f, status: v })); setPage(1); }} />
+          onChange={setStatus} />
       </Space>
       <Table<OrderRow>
         rowKey="id"
         loading={isFetching}
         dataSource={data?.items}
         scroll={{ x: 900 }}
-        onRow={(o) => ({ onClick: () => setOpenId(o.id), style: { cursor: 'pointer' } })}
+        rowClassName="clickable"
+        onRow={(o) => ({ onClick: () => setOpenId(o.id) })}
         pagination={{ current: page, pageSize: 20, total: data?.total, onChange: setPage, showSizeChanger: false }}
         columns={[
           { title: 'رقم الطلب', dataIndex: 'number' },
@@ -83,8 +123,9 @@ export function OrdersPage() {
           { title: 'الحالة', render: (_, o) => <Tag color={STATUS[o.status].color}>{STATUS[o.status].label}</Tag> },
         ]}
       />
-      <OrderDrawer id={openId} onClose={() => setOpenId(null)} />
     </Card>
+    <OrderDrawer id={openId} onClose={() => setOpenId(null)} />
+    </>
   );
 }
 

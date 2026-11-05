@@ -6,7 +6,9 @@ import {
 import { useState } from 'react';
 import { ProductPicker } from '../../components/ProductPicker';
 import { api, errorMessage, type Page } from '../../lib/api';
+import { PageHeader } from '../../components/PageHeader';
 import { useAuth } from '../../lib/auth';
+import { useTabParam } from '../../lib/useOpenParam';
 import { fmtDateTime, fmtSigned } from '../../lib/format';
 import { MOVEMENT_TYPE, PRODUCT_TYPE, type MovementType, type ProductType } from '../../lib/labels';
 
@@ -55,20 +57,22 @@ export function InventoryPage() {
   const { can } = useAuth();
   const [dialog, setDialog] = useState<'receipt' | 'transfer' | 'adjust' | 'count' | null>(null);
   const [warehouseId, setWarehouseId] = useState<number | undefined>();
+  const [tab, setTab] = useTabParam('warehouses');
 
   return (
-    <Card
-      title={<Typography.Title level={4} style={{ margin: 0 }}>المخزون والعهد</Typography.Title>}
-      extra={
-        <Space wrap>
-          {can('inventory.write') && <Button type="primary" onClick={() => setDialog('transfer')}>صرف / تحويل عهدة</Button>}
-          {can('inventory.write') && <Button onClick={() => setDialog('receipt')}>استلام من مورد</Button>}
-          {can('inventory.approve') && <Button onClick={() => setDialog('count')}>جرد وتسوية</Button>}
-          {can('inventory.approve') && <Button onClick={() => setDialog('adjust')}>تالف / فاقد</Button>}
-        </Space>
-      }
-    >
-      <Tabs items={[
+    <>
+    <PageHeader
+      title="المخزون والعهد"
+      subtitle="المخزن الرئيسي وعهد الفنيين، وكل حركة صرف أو بيع أو تسوية"
+      actions={<>
+        {can('inventory.approve') && <Button onClick={() => setDialog('adjust')}>تالف / فاقد</Button>}
+        {can('inventory.approve') && <Button onClick={() => setDialog('count')}>جرد وتسوية</Button>}
+        {can('inventory.write') && <Button onClick={() => setDialog('receipt')}>استلام من مورد</Button>}
+        {can('inventory.write') && <Button type="primary" onClick={() => setDialog('transfer')}>صرف / تحويل عهدة</Button>}
+      </>}
+    />
+    <Card>
+      <Tabs activeKey={tab} onChange={setTab} items={[
         { key: 'warehouses', label: 'المخازن وعهد الفنيين', children: <WarehousesTab onOpen={setWarehouseId} /> },
         { key: 'balances', label: 'الأرصدة', children: <BalancesTab /> },
         { key: 'movements', label: 'سجل الحركات', children: <MovementsTab /> },
@@ -76,6 +80,7 @@ export function InventoryPage() {
       <WarehouseLedgerModal warehouseId={warehouseId} onClose={() => setWarehouseId(undefined)} />
       <MovementDialog kind={dialog} onClose={() => setDialog(null)} />
     </Card>
+    </>
   );
 }
 

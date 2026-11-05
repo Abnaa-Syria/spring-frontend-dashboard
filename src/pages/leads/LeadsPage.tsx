@@ -1,9 +1,12 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  App, Card, Col, Form, Input, Modal, Row, Select, Space, Statistic, Table, Tag, Typography,
+  App, Badge, Button, Card, Col, Form, Input, Modal, Row, Select, Space, Statistic, Table, Tag, Typography,
 } from 'antd';
 import { useState } from 'react';
 import { api, errorMessage, type Page } from '../../lib/api';
+import { DownloadOutlined } from '@ant-design/icons';
+import { PageHeader } from '../../components/PageHeader';
+import { downloadCsv, fetchAll } from '../../lib/export';
 import { useAuth } from '../../lib/auth';
 import { fmtDateTime } from '../../lib/format';
 
@@ -51,22 +54,60 @@ export function LeadsPage() {
 
   const won = data?.byStatus.WON ?? 0;
   const closed = won + (data?.byStatus.LOST ?? 0);
+  const { message } = App.useApp();
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const rows = await fetchAll<Lead>('/leads', filters);
+      downloadCsv('leads', [
+        { title: 'التاريخ', value: (l) => fmtDateTime(l.createdAt) },
+        { title: 'العميل المحتمل', value: (l) => l.customerName },
+        { title: 'الموبايل', value: (l) => l.phone },
+        { title: 'المنطقة', value: (l) => l.area },
+        { title: 'المنتج', value: (l) => l.product?.nameAr },
+        { title: 'صاحب الترشيح', value: (l) => l.referrer.name },
+        { title: 'المتابعة', value: (l) => l.assignee?.name },
+        { title: 'الحالة', value: (l) => LEAD_STATUS[l.status].label },
+        { title: 'ملاحظات', value: (l) => l.outcomeNote ?? l.notes },
+      ], rows);
+    } catch (e) {
+      message.error(errorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
-    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>الترشيحات</Typography.Title>}>
-      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-        {(Object.keys(LEAD_STATUS) as LeadStatus[]).map((s) => (
-          <Col key={s} xs={12} md={4}>
-            <Statistic title={LEAD_STATUS[s].label} value={data?.byStatus[s] ?? 0} />
+    <>
+    <PageHeader
+      title="الترشيحات"
+      subtitle="عملاء محتملين رشحهم الفنيين والمندوبين"
+      actions={<Button icon={<DownloadOutlined />} loading={exporting} onClick={exportCsv}>تصدير Excel</Button>}
+    />
+    <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+      {(Object.keys(LEAD_STATUS) as LeadStatus[]).map((s) => {
+        const active = filters.status === s;
+        return (
+          <Col key={s} xs={12} sm={8} lg={{ flex: '20%' }}>
+            <Card hoverable onClick={() => update({ status: active ? undefined : s })} styles={{ body: { padding: 14 } }}
+              style={active ? { borderColor: '#2E508F', boxShadow: '0 0 0 1px #2E508F' } : undefined}>
+              <Statistic title={<Space size={6}><Badge color={LEAD_STATUS[s].color} />{LEAD_STATUS[s].label}</Space>} value={data?.byStatus[s] ?? 0} />
+            </Card>
           </Col>
-        ))}
-        <Col xs={12} md={4}>
+        );
+      })}
+      <Col xs={12} sm={8} lg={{ flex: '20%' }}>
+        <Card styles={{ body: { padding: 14 } }}>
           <Statistic title="نسبة التحويل" value={closed ? Math.round((won / closed) * 100) : 0} suffix="%" />
-        </Col>
-      </Row>
-      <Space wrap style={{ marginBottom: 16 }}>
+        </Card>
+      </Col>
+    </Row>
+    <Card className="table-card">
+      <Space wrap className="table-toolbar" style={{ display: 'flex' }}>
         <Input.Search placeholder="الاسم أو الموبايل" allowClear style={{ width: 240 }} onSearch={(v) => update({ search: v || undefined })} />
         <Select allowClear placeholder="الحالة" style={{ width: 150 }}
+          value={filters.status}
           options={(Object.keys(LEAD_STATUS) as LeadStatus[]).map((s) => ({ value: s, label: LEAD_STATUS[s].label }))}
           onChange={(v) => update({ status: v })} />
         <Select allowClear placeholder="المسؤول عن المتابعة" style={{ width: 200 }}
@@ -78,7 +119,8 @@ export function LeadsPage() {
         loading={isFetching}
         dataSource={data?.items}
         scroll={{ x: 1000 }}
-        onRow={(l) => ({ onClick: () => can('lead.write') && setEditing(l), style: { cursor: 'pointer' } })}
+        rowClassName={can('lead.write') ? 'clickable' : undefined}
+        onRow={(l) => ({ onClick: () => can('lead.write') && setEditing(l) })}
         pagination={{ current: page, pageSize: 20, total: data?.total, onChange: setPage, showSizeChanger: false }}
         columns={[
           { title: 'التاريخ', dataIndex: 'createdAt', render: fmtDateTime, width: 170 },
@@ -91,8 +133,9 @@ export function LeadsPage() {
           { title: 'ملاحظات', render: (_, l) => l.outcomeNote ?? l.notes ?? '—', ellipsis: true },
         ]}
       />
-      <LeadModal lead={editing} assignees={assignees.data ?? []} onClose={() => setEditing(null)} />
     </Card>
+    <LeadModal lead={editing} assignees={assignees.data ?? []} onClose={() => setEditing(null)} />
+    </>
   );
 }
 

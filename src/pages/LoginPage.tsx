@@ -1,12 +1,19 @@
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Alert, Button, Card, Form, Input, Typography } from 'antd';
+import { CheckCircleFilled, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { Alert, Button, Form, Grid, Input, Typography } from 'antd';
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { errorMessage } from '../lib/api';
 import { useAuth } from '../lib/auth';
 
+const POINTS = [
+  'توزيع طلبات التركيب والصيانة على الفنيين ومتابعتها لحظياً',
+  'الفواتير والتحصيل وعهدة الفنيين في مكان واحد',
+  'تذكير العملاء بمواعيد الصيانة وتغيير الشمعات تلقائياً',
+];
+
 export function LoginPage() {
   const { user, login } = useAuth();
+  const screens = Grid.useBreakpoint();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -25,26 +32,44 @@ export function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100%', display: 'grid', placeItems: 'center', padding: 16,
-      background: 'linear-gradient(160deg, #4FB3C8 0%, #34508F 100%)',
-    }}>
-      <Card style={{ width: '100%', maxWidth: 400 }}>
-        <Typography.Title level={2} style={{ color: '#34508F', marginBottom: 4 }}>Spring</Typography.Title>
-        <Typography.Paragraph type="secondary">تسجيل الدخول إلى لوحة التحكم</Typography.Paragraph>
-        {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
-        <Form layout="vertical" onFinish={submit} requiredMark={false}>
-          <Form.Item name="username" label="اسم المستخدم" rules={[{ required: true, message: 'مطلوب' }]}>
-            <Input prefix={<UserOutlined />} autoComplete="username" size="large" />
-          </Form.Item>
-          <Form.Item name="password" label="كلمة المرور" rules={[{ required: true, message: 'مطلوب' }]}>
-            <Input.Password prefix={<LockOutlined />} autoComplete="current-password" size="large" />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" block size="large" loading={loading}>
-            دخول
-          </Button>
-        </Form>
-      </Card>
+    <div style={{ minHeight: '100%', display: 'flex', background: '#fff' }}>
+      {screens.lg && (
+        <div style={{
+          flex: '0 0 46%', padding: 56, color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          background: 'radial-gradient(circle at 20% 110%, rgba(66,184,200,.45) 0%, transparent 55%), linear-gradient(160deg, #2E508F 0%, #16304F 100%)',
+        }}>
+          <img src="/logo-white.svg" alt="Spring" style={{ height: 52, alignSelf: 'flex-start' }} />
+          <div>
+            <h1 style={{ fontSize: 34, fontWeight: 800, lineHeight: 1.4, margin: '0 0 12px' }}>لوحة إدارة Spring</h1>
+            <p style={{ fontSize: 16, opacity: 0.8, margin: '0 0 28px' }}>مبيعات وتركيب وصيانة فلاتر المياه — من الطلب لحد التحصيل.</p>
+            {POINTS.map((p) => (
+              <div key={p} style={{ display: 'flex', gap: 10, alignItems: 'baseline', marginBottom: 12, fontSize: 15 }}>
+                <CheckCircleFilled style={{ color: '#42B8C8' }} />{p}
+              </div>
+            ))}
+          </div>
+          <div style={{ opacity: 0.55, fontSize: 13 }}>© {new Date().getFullYear()} Spring</div>
+        </div>
+      )}
+      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, background: screens.lg ? '#fff' : '#F2F7FC' }}>
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          {!screens.lg && <img src="/logo-word.svg" alt="Spring" style={{ height: 44, marginBottom: 24 }} />}
+          <Typography.Title level={2} style={{ marginBottom: 4, fontWeight: 800 }}>تسجيل الدخول</Typography.Title>
+          <Typography.Paragraph type="secondary" style={{ marginBottom: 28 }}>أدخل بيانات حسابك للمتابعة</Typography.Paragraph>
+          {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
+          <Form layout="vertical" onFinish={submit} requiredMark={false} size="large">
+            <Form.Item name="username" label="اسم المستخدم أو الموبايل" rules={[{ required: true, message: 'مطلوب' }]}>
+              <Input prefix={<UserOutlined style={{ color: '#8A99AD' }} />} autoComplete="username" autoFocus />
+            </Form.Item>
+            <Form.Item name="password" label="كلمة المرور" rules={[{ required: true, message: 'مطلوب' }]}>
+              <Input.Password prefix={<LockOutlined style={{ color: '#8A99AD' }} />} autoComplete="current-password" />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" block loading={loading} style={{ height: 46, marginTop: 8 }}>
+              دخول
+            </Button>
+          </Form>
+        </div>
+      </div>
     </div>
   );
 }

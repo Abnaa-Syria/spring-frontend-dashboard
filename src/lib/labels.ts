@@ -86,3 +86,12 @@ export const HANDOVER_STATUS: Labeled<HandoverStatus> = {
 
 export const options =<K extends string>(m: Labeled<K>) =>
   (Object.keys(m) as K[]).map((value) => ({ value, label: m[value].label }));
+
+export type OrderStatus = 'NEW' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
+export const ORDER_STATUS: Record<OrderStatus, { label: string; color: string }> = {
+  NEW: { label: 'جديد', color: 'blue' },
+  PREPARING: { label: 'قيد التجهيز', color: 'gold' },
+  OUT_FOR_DELIVERY: { label: 'خرج للتوصيل', color: 'cyan' },
+  DELIVERED: { label: 'تم التسليم', color: 'green' },
+  CANCELLED: { label: 'ملغي', color: 'red' },
+};

@@ -1,7 +1,9 @@
 import { PlusOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  App, Button, Card, Checkbox, Col, Form, Input, Modal, Row, Select, Space, Switch, Table, Tag, Typography,
+  App, Button, Card, Checkbox, Col, Form, Input, Modal, Row, Select, Space, Switch, Table, Tag,
 } from 'antd';
 import { useState } from 'react';
 import { EnumTag } from '../../components/EnumTag';
@@ -25,6 +27,7 @@ interface Technician {
 
 export function TechniciansPage() {
   const { can } = useAuth();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<{ search?: string; specialization?: Specialization }>({});
   const [editing, setEditing] = useState<Technician | 'new' | null>(null);
@@ -37,13 +40,16 @@ export function TechniciansPage() {
   });
 
   return (
-    <Card
-      title={<Typography.Title level={4} style={{ margin: 0 }}>الفنيين</Typography.Title>}
-      extra={can('technician.write') && (
+    <>
+    <PageHeader
+      title="الفنيين"
+      subtitle="اضغط على الفني لعرض مهامه وأداءه وعهدته"
+      actions={can('technician.write') && (
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setEditing('new')}>فني جديد</Button>
       )}
-    >
-      <Space wrap style={{ marginBottom: 16 }}>
+    />
+    <Card className="table-card">
+      <Space wrap className="table-toolbar" style={{ display: 'flex' }}>
         <Input.Search placeholder="الاسم، الكود أو الموبايل" allowClear style={{ width: 260 }}
           onSearch={(v) => { setFilters((f) => ({ ...f, search: v || undefined })); setPage(1); }} />
         <Select allowClear placeholder="التخصص" style={{ width: 160 }} options={options(SPECIALIZATION)}
@@ -54,6 +60,8 @@ export function TechniciansPage() {
         loading={isFetching}
         dataSource={data?.items}
         scroll={{ x: 900 }}
+        rowClassName="clickable"
+        onRow={(t) => ({ onClick: () => navigate(`/technicians/${t.id}`) })}
         pagination={{ current: page, pageSize: 20, total: data?.total, onChange: setPage, showSizeChanger: false }}
         columns={[
           { title: 'الكود', dataIndex: 'code', width: 100 },
@@ -73,7 +81,7 @@ export function TechniciansPage() {
           {
             title: '',
             render: (_, t) => can('technician.write') && (
-              <Space>
+              <Space onClick={(e) => e.stopPropagation()}>
                 <Button size="small" onClick={() => setEditing(t)}>تعديل</Button>
                 <Button size="small" onClick={() => setResetting(t)}>كلمة المرور</Button>
               </Space>
@@ -84,6 +92,7 @@ export function TechniciansPage() {
       <TechnicianModal technician={editing} onClose={() => setEditing(null)} />
       <ResetPasswordModal technician={resetting} onClose={() => setResetting(null)} />
     </Card>
+    </>
   );
 }
 

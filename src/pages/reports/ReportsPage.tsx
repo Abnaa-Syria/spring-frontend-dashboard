@@ -4,7 +4,9 @@ import {
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
+import { PageHeader } from '../../components/PageHeader';
 import { api, type Page } from '../../lib/api';
+import { useTabParam } from '../../lib/useOpenParam';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtMoney } from '../../lib/format';
 import { PAYMENT_METHOD, SERVICE_KIND, SERVICE_STATUS, type PaymentMethod, type ServiceKind, type ServiceStatus } from '../../lib/labels';
@@ -32,13 +34,17 @@ const PRESETS: { label: string; range: () => [Dayjs, Dayjs] }[] = [
 ];
 
 export function ReportsPage() {
+  const [tab, setTab] = useTabParam('summary');
   return (
-    <Card title={<Typography.Title level={4} style={{ margin: 0 }}>التقارير</Typography.Title>}>
-      <Tabs items={[
+    <>
+    <PageHeader title="التقارير" subtitle="أداء المبيعات والخدمة والفنيين، والصيانات المستحقة" />
+    <Card>
+      <Tabs activeKey={tab} onChange={setTab} items={[
         { key: 'summary', label: 'ملخص الأداء', children: <SummaryTab /> },
         { key: 'due', label: 'الصيانات المستحقة', children: <DueTab /> },
       ]} />
     </Card>
+    </>
   );
 }
 

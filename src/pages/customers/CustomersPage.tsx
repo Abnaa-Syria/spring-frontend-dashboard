@@ -1,4 +1,6 @@
-import { PlusOutlined } from '@ant-design/icons';
+import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+import { PageHeader } from '../../components/PageHeader';
+import { downloadCsv, fetchAll } from '../../lib/export';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { App, Button, Card, Col, Form, Input, Modal, Row, Table, Tag, Typography } from 'antd';
 import { useState } from 'react';
@@ -25,28 +27,62 @@ export function CustomersPage() {
     placeholderData: keepPreviousData,
   });
 
+  const { message } = App.useApp();
+  const [exporting, setExporting] = useState(false);
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const rows = await fetchAll<CustomerRow>('/customers', { search: search || undefined });
+      downloadCsv('customers', [
+        { title: 'الاسم', value: (c) => c.name },
+        { title: 'الموبايل', value: (c) => c.phone },
+        { title: 'موبايل آخر', value: (c) => c.altPhone },
+        { title: 'المحافظة', value: (c) => c.addresses[0]?.governorate },
+        { title: 'المدينة', value: (c) => c.addresses[0]?.city },
+        { title: 'المنطقة', value: (c) => c.addresses[0]?.area },
+        { title: 'الأجهزة', value: (c) => c._count.devices },
+        { title: 'طلبات الخدمة', value: (c) => c._count.serviceRequests },
+        { title: 'طلبات المتجر', value: (c) => c._count.orders },
+        { title: 'حساب التطبيق', value: (c) => (c.userId ? 'نعم' : 'لا') },
+        { title: 'رقم النظام القديم', value: (c) => c.legacyCustomerId },
+        { title: 'تاريخ الإضافة', value: (c) => fmtDate(c.createdAt) },
+      ], rows);
+    } catch (e) {
+      message.error(errorMessage(e));
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
-    <Card
-      title={<Typography.Title level={4} style={{ margin: 0 }}>العملاء</Typography.Title>}
-      extra={can('customer.write') && (
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>عميل جديد</Button>
-      )}
-    >
-      <Input.Search
-        placeholder="الاسم، الموبايل، أو رقم العميل في النظام القديم"
-        allowClear
-        onSearch={(v) => { setSearch(v.trim()); setPage(1); }}
-        style={{ maxWidth: 360, marginBottom: 16 }}
-      />
+    <>
+    <PageHeader
+      title="العملاء"
+      subtitle={data ? `${data.total.toLocaleString('en-US')} عميل` : undefined}
+      actions={<>
+        <Button icon={<DownloadOutlined />} loading={exporting} onClick={exportCsv}>تصدير Excel</Button>
+        {can('customer.write') && <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>عميل جديد</Button>}
+      </>}
+    />
+    <Card className="table-card">
+      <div className="table-toolbar">
+        <Input.Search
+          placeholder="الاسم، الموبايل، أو رقم العميل في النظام القديم"
+          allowClear
+          onSearch={(v) => { setSearch(v.trim()); setPage(1); }}
+          style={{ maxWidth: 360 }}
+        />
+      </div>
       <Table<CustomerRow>
         rowKey="id"
         loading={isFetching}
         dataSource={data?.items}
         scroll={{ x: 800 }}
-        onRow={(c) => ({ onClick: () => navigate(`/customers/${c.id}`), style: { cursor: 'pointer' } })}
+        rowClassName="clickable"
+        onRow={(c) => ({ onClick: () => navigate(`/customers/${c.id}`) })}
         pagination={{ current: page, pageSize: 20, total: data?.total, onChange: setPage, showSizeChanger: false }}
         columns={[
-          { title: 'الاسم', dataIndex: 'name' },
+          { title: 'الاسم', dataIndex: 'name', render: (v: string) => <Typography.Text strong>{v}</Typography.Text> },
           { title: 'الموبايل', dataIndex: 'phone', render: (v: string) => <span dir="ltr">{v}</span> },
           {
             title: 'المنطقة',
@@ -67,6 +103,7 @@ export function CustomersPage() {
         onCreated={(id) => navigate(`/customers/${id}`)}
       />
     </Card>
+    </>
   );
 }
 
