@@ -53,7 +53,7 @@ export function LoginPage() {
       )}
       <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, background: screens.lg ? '#fff' : '#F2F7FC' }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
-          {!screens.lg && <img src="/logo-word.svg" alt="Spring" style={{ height: 44, marginBottom: 24 }} />}
+          {!screens.lg && <img src="/logo-color.svg" alt="Spring" style={{ height: 44, marginBottom: 24 }} />}
           <Typography.Title level={2} style={{ marginBottom: 4, fontWeight: 800 }}>تسجيل الدخول</Typography.Title>
           <Typography.Paragraph type="secondary" style={{ marginBottom: 28 }}>أدخل بيانات حسابك للمتابعة</Typography.Paragraph>
           {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}

@@ -27,7 +27,7 @@ export async function printInvoice(inv: PrintableInvoice, methodLabel: (m: strin
     company = (await api.get('/config')).data;
   } catch { /* print without company details */ }
 
-  const logo = `${location.origin}/logo-word.svg`;
+  const logo = `${location.origin}/logo-color.svg`;
   const rows = inv.items.map((i, n) => `
     <tr><td>${n + 1}</td><td>${esc(i.description)}</td><td class="num">${esc(fmtMoney(i.unitPrice))}</td>
     <td class="num">${i.quantity}</td><td class="num">${esc(fmtMoney(i.lineTotal))}</td></tr>`).join('');
