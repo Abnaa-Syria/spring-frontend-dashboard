@@ -25,6 +25,6 @@ export const NAV: NavItem[] = [
   { path: '/inventory', label: 'المخزون والعهد', icon: <DropboxOutlined />, permission: 'inventory.read' },
   { path: '/invoices', label: 'الفواتير والتحصيل', icon: <WalletOutlined />, permission: 'invoice.read' },
   { path: '/leads', label: 'الترشيحات', icon: <RiseOutlined />, permission: 'lead.read' },
-  { path: '/reports', label: 'التقارير', icon: <FileTextOutlined />, permission: 'report.read', soon: true },
+  { path: '/reports', label: 'التقارير', icon: <FileTextOutlined />, permission: 'report.read' },
   { path: '/settings', label: 'المستخدمين والصلاحيات', icon: <SettingOutlined />, permission: 'user.manage' },
 ];

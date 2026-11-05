@@ -29,7 +29,7 @@ export function HomePage() {
     { title: 'طلبات تحتاج تعيين', value: data?.unassigned, to: '/scheduling', danger: !!data?.unassigned },
     { title: 'طوارئ مفتوحة', value: data?.emergencies, to: '/service-requests?priority=EMERGENCY', danger: !!data?.emergencies },
     { title: 'زيارات اليوم', value: data?.todayVisits, to: '/service-requests' },
-    { title: 'صيانات مستحقة خلال 7 أيام', value: data?.dueMaintenanceNext7Days },
+    { title: 'صيانات مستحقة خلال 7 أيام', value: data?.dueMaintenanceNext7Days, to: '/reports' },
     { title: 'العملاء', value: data?.customers, to: '/customers' },
     { title: 'الفنيين النشطين', value: data?.technicians, to: '/technicians' },
   ];

@@ -14,6 +14,7 @@ import { CustomerDetailPage } from './pages/customers/CustomerDetailPage';
 import { InventoryPage } from './pages/inventory/InventoryPage';
 import { LeadsPage } from './pages/leads/LeadsPage';
 import { OrdersPage } from './pages/orders/OrdersPage';
+import { ReportsPage } from './pages/reports/ReportsPage';
 import { CustomersPage } from './pages/customers/CustomersPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
@@ -51,6 +52,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="invoices" element={<BillingPage />} />
                   <Route path="leads" element={<LeadsPage />} />
                   <Route path="orders" element={<OrdersPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
                   <Route path="settings" element={<UsersPage />} />
                   {NAV.filter((n) => n.soon).map((n) => (
                     <Route key={n.path} path={n.path.slice(1)} element={<Placeholder title={n.label} />} />
