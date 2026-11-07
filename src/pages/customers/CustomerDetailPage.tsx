@@ -2,27 +2,19 @@ import {
   CalendarOutlined, EditOutlined, EnvironmentOutlined, FileTextOutlined, MobileOutlined, PhoneOutlined, PlusOutlined,
   ShoppingCartOutlined, StarOutlined, ToolOutlined,
 } from '@ant-design/icons';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  App, Avatar, Badge, Button, Card, Col, DatePicker, Empty, Flex, Form, Input, Modal, Row, Select, Skeleton, Space,
-  Table, Tabs, Tag, Typography,
-} from 'antd';
-import dayjs, { type Dayjs } from 'dayjs';
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Avatar, Badge, Button, Card, Col, Empty, Flex, Row, Skeleton, Space, Table, Tabs, Tag, Typography } from 'antd';
+import dayjs from 'dayjs';
 import { useNavigate, useParams } from 'react-router-dom';
 import { EnumTag } from '../../components/EnumTag';
 import { PageHeader } from '../../components/PageHeader';
 import { StatCard } from '../../components/StatCard';
-import { api, errorMessage, type Page } from '../../lib/api';
+import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { fmtAddress, fmtDate, fmtDateTime, fmtMoney, fmtNumber } from '../../lib/format';
 import { ORDER_STATUS, PRIORITY, SERVICE_KIND, SERVICE_STATUS, type OrderStatus } from '../../lib/labels';
 import { useTabParam } from '../../lib/useOpenParam';
-import { CreateServiceRequestModal } from '../service-requests/CreateServiceRequestModal';
-import { ServiceRequestDrawer } from '../service-requests/ServiceRequestDrawer';
-import type { ProductRow } from '../products/types';
-import { AddressFields } from './AddressFields';
-import type { Address, CustomerDetail } from './types';
+import type { CustomerDetail } from './types';
 
 const OPEN = ['PENDING', 'SCHEDULED', 'ASSIGNED', 'ON_THE_WAY', 'ARRIVED', 'IN_PROGRESS'];
 
@@ -39,10 +31,6 @@ export function CustomerDetailPage() {
   const { can } = useAuth();
   const navigate = useNavigate();
   const [tab, setTab] = useTabParam('devices');
-  const [addressModal, setAddressModal] = useState<{ open: boolean; address?: Address }>({ open: false });
-  const [deviceModal, setDeviceModal] = useState(false);
-  const [requestModal, setRequestModal] = useState(false);
-  const [openRequest, setOpenRequest] = useState<number | null>(null);
 
   const { data: c, isLoading } = useQuery({
     queryKey: ['customer', id],
@@ -61,9 +49,12 @@ export function CustomerDetailPage() {
       <PageHeader
         crumbs={[{ title: 'العملاء', to: '/customers' }, { title: c.name }]}
         title={c.name}
-        actions={can('service.write') && (
-          <Button type="primary" icon={<PlusOutlined />} onClick={() => setRequestModal(true)}>طلب خدمة</Button>
-        )}
+        actions={<>
+          {editable && <Button icon={<EditOutlined />} onClick={() => navigate(`/customers/${id}/edit`)}>تعديل البيانات</Button>}
+          {can('service.write') && (
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate(`/service-requests/new?customerId=${id}`)}>طلب خدمة</Button>
+          )}
+        </>}
       />
 
       <Card style={{ marginBottom: 16 }}>
@@ -107,8 +98,8 @@ export function CustomerDetailPage() {
           activeKey={tab}
           onChange={setTab}
           tabBarExtraContent={
-            tab === 'devices' && editable ? <Button size="small" icon={<PlusOutlined />} onClick={() => setDeviceModal(true)}>إضافة جهاز</Button>
-              : tab === 'addresses' && editable ? <Button size="small" icon={<PlusOutlined />} onClick={() => setAddressModal({ open: true })}>إضافة عنوان</Button>
+            tab === 'devices' && editable ? <Button size="small" icon={<PlusOutlined />} onClick={() => navigate(`/customers/${id}/devices/new`)}>إضافة جهاز</Button>
+              : tab === 'addresses' && editable ? <Button size="small" icon={<PlusOutlined />} onClick={() => navigate(`/customers/${id}/addresses/new`)}>إضافة عنوان</Button>
                 : null
           }
           items={[
@@ -175,7 +166,7 @@ export function CustomerDetailPage() {
                   pagination={false}
                   scroll={{ x: 760 }}
                   rowClassName="clickable"
-                  onRow={(r) => ({ onClick: () => setOpenRequest(r.id) })}
+                  onRow={(r) => ({ onClick: () => navigate(`/service-requests/${r.id}`) })}
                   locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="لا توجد طلبات" /> }}
                   columns={[
                     { title: 'الرقم', dataIndex: 'number' },
@@ -197,7 +188,7 @@ export function CustomerDetailPage() {
                   dataSource={c.orders}
                   pagination={false}
                   rowClassName="clickable"
-                  onRow={(o) => ({ onClick: () => navigate(`/orders?open=${o.id}`) })}
+                  onRow={(o) => ({ onClick: () => navigate(`/orders/${o.id}`) })}
                   locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="لا توجد طلبات شراء" /> }}
                   columns={[
                     { title: 'الرقم', dataIndex: 'number' },
@@ -221,7 +212,7 @@ export function CustomerDetailPage() {
                   dataSource={c.invoices}
                   pagination={false}
                   rowClassName="clickable"
-                  onRow={(i) => ({ onClick: () => navigate(`/invoices?open=${i.id}`) })}
+                  onRow={(i) => ({ onClick: () => navigate(`/invoices/${i.id}`) })}
                   locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="لا توجد فواتير" /> }}
                   columns={[
                     { title: 'الرقم', dataIndex: 'number' },
@@ -246,7 +237,7 @@ export function CustomerDetailPage() {
                         title={<Space><EnvironmentOutlined />{a.label ?? 'عنوان'}{a.isDefault && <Tag color="blue">افتراضي</Tag>}</Space>}
                         extra={editable && (
                           <Button size="small" type="text" icon={<EditOutlined />} aria-label="تعديل العنوان"
-                            onClick={() => setAddressModal({ open: true, address: a })} />
+                            onClick={() => navigate(`/customers/${id}/addresses/${a.id}/edit`)} />
                         )}
                       >
                         <div>{fmtAddress(a)}</div>
@@ -266,125 +257,6 @@ export function CustomerDetailPage() {
         />
       </Card>
 
-      <AddressModal customerId={id} state={addressModal} onClose={() => setAddressModal({ open: false })} />
-      <DeviceModal customer={c} open={deviceModal} onClose={() => setDeviceModal(false)} />
-      <CreateServiceRequestModal
-        open={requestModal}
-        customerId={id}
-        onClose={() => setRequestModal(false)}
-        onCreated={(rid) => { setRequestModal(false); setOpenRequest(rid); }}
-      />
-      <ServiceRequestDrawer id={openRequest} onClose={() => setOpenRequest(null)} />
     </>
-  );
-}
-
-function AddressModal({
-  customerId, state, onClose,
-}: { customerId: number; state: { open: boolean; address?: Address }; onClose: () => void }) {
-  const [form] = Form.useForm();
-  const { message } = App.useApp();
-  const qc = useQueryClient();
-  const editing = state.address;
-
-  const save = useMutation({
-    mutationFn: (v: object) => editing
-      ? api.put(`/customers/${customerId}/addresses/${editing.id}`, v)
-      : api.post(`/customers/${customerId}/addresses`, v),
-    onSuccess: () => {
-      message.success(editing ? 'تم تحديث العنوان (العنوان السابق محفوظ في السجل)' : 'تم إضافة العنوان');
-      qc.invalidateQueries({ queryKey: ['customer', customerId] });
-      onClose();
-    },
-    onError: (e) => message.error(errorMessage(e)),
-  });
-
-  return (
-    <Modal
-      open={state.open}
-      title={editing ? 'تعديل العنوان' : 'عنوان جديد'}
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      okText="حفظ"
-      cancelText="إلغاء"
-      confirmLoading={save.isPending}
-      width={680}
-      destroyOnHidden
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={save.mutate}
-        initialValues={editing ? { ...editing, label: editing.label ?? undefined } : undefined}
-        preserve={false}
-      >
-        <Form.Item name="label" label="اسم العنوان"><Input placeholder="المنزل، العمل…" /></Form.Item>
-        <AddressFields />
-      </Form>
-    </Modal>
-  );
-}
-
-function DeviceModal({ customer, open, onClose }: { customer: CustomerDetail; open: boolean; onClose: () => void }) {
-  const [form] = Form.useForm();
-  const { message } = App.useApp();
-  const qc = useQueryClient();
-  const [search, setSearch] = useState('');
-
-  const products = useQuery({
-    queryKey: ['products', 'lookup', 'DEVICE', search],
-    queryFn: async () =>
-      (await api.get<Page<ProductRow>>('/products', { params: { type: 'DEVICE', search: search || undefined, pageSize: 20 } })).data.items,
-    enabled: open,
-  });
-
-  const save = useMutation({
-    mutationFn: (v: { productId?: number; modelName?: string; serialNumber?: string; addressId?: number; installedAt?: Dayjs; nextMaintenanceAt?: Dayjs }) =>
-      api.post(`/customers/${customer.id}/devices`, {
-        ...v,
-        installedAt: v.installedAt?.format('YYYY-MM-DD'),
-        nextMaintenanceAt: v.nextMaintenanceAt?.format('YYYY-MM-DD'),
-      }),
-    onSuccess: () => {
-      message.success('تم إضافة الجهاز');
-      qc.invalidateQueries({ queryKey: ['customer', customer.id] });
-      onClose();
-    },
-    onError: (e) => message.error(errorMessage(e)),
-  });
-
-  return (
-    <Modal
-      open={open}
-      title="إضافة جهاز للعميل"
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      okText="حفظ"
-      cancelText="إلغاء"
-      confirmLoading={save.isPending}
-      destroyOnHidden
-    >
-      <Form form={form} layout="vertical" onFinish={save.mutate} preserve={false}>
-        <Form.Item name="productId" label="المنتج">
-          <Select
-            allowClear
-            showSearch={{ filterOption: false, onSearch: setSearch }}
-            placeholder="اختر من المنتجات"
-            options={products.data?.map((p) => ({ value: p.id, label: `${p.nameAr} (${p.sku})` }))}
-          />
-        </Form.Item>
-        <Form.Item name="modelName" label="اسم الموديل" extra="مطلوب لو الجهاز مش موجود في قائمة المنتجات">
-          <Input />
-        </Form.Item>
-        <Form.Item name="serialNumber" label="الرقم التسلسلي"><Input dir="ltr" /></Form.Item>
-        <Form.Item name="addressId" label="مكان التركيب">
-          <Select allowClear options={customer.addresses.map((a) => ({ value: a.id, label: fmtAddress(a) }))} />
-        </Form.Item>
-        <Space>
-          <Form.Item name="installedAt" label="تاريخ التركيب"><DatePicker /></Form.Item>
-          <Form.Item name="nextMaintenanceAt" label="الصيانة القادمة"><DatePicker /></Form.Item>
-        </Space>
-      </Form>
-    </Modal>
   );
 }

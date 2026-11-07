@@ -173,8 +173,8 @@ export function HomePage() {
               <Flex vertical>
                 {data.today.map((r) => (
                   <div key={r.id} className="action-row" role="link" tabIndex={0}
-                    onClick={() => navigate(`/service-requests?open=${r.id}`)}
-                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/service-requests?open=${r.id}`)}>
+                    onClick={() => navigate(`/service-requests/${r.id}`)}
+                    onKeyDown={(e) => e.key === 'Enter' && navigate(`/service-requests/${r.id}`)}>
                     <div style={{ width: 64, textAlign: 'center', flexShrink: 0 }}>
                       <div style={{ fontWeight: 800, fontSize: 16 }}>{dayjs(r.scheduledAt).format('h:mm')}</div>
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>{dayjs(r.scheduledAt).format('A')}</Typography.Text>

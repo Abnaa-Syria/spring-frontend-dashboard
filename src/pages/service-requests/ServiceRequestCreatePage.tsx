@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Col, DatePicker, Divider, Form, Input, Modal, Radio, Row, Select } from 'antd';
+import { App, Button, Card, Col, DatePicker, Divider, Flex, Form, Input, Radio, Row, Select } from 'antd';
 import type { Dayjs } from 'dayjs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage, type Page } from '../../lib/api';
 import { fmtAddress } from '../../lib/format';
 import { PHONE_RULE } from '../../lib/validation';
@@ -25,9 +27,10 @@ interface Values {
 }
 
 /** Office booking (usually from a phone call). Can create the customer in the same step. */
-export function CreateServiceRequestModal({
-  open, onClose, onCreated, customerId: fixedCustomerId,
-}: { open: boolean; onClose: () => void; onCreated: (id: number) => void; customerId?: number }) {
+export function ServiceRequestCreatePage() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const fixedCustomerId = Number(params.get('customerId')) || undefined;
   const [form] = Form.useForm<Values>();
   const { message } = App.useApp();
   const qc = useQueryClient();
@@ -38,12 +41,12 @@ export function CreateServiceRequestModal({
   const customers = useQuery({
     queryKey: ['customers', 'lookup', search],
     queryFn: async () => (await api.get<Page<CustomerRow>>('/customers', { params: { search, pageSize: 10 } })).data.items,
-    enabled: open && mode === 'existing' && !fixedCustomerId,
+    enabled: mode === 'existing' && !fixedCustomerId,
   });
   const customer = useQuery({
     queryKey: ['customer', customerId],
     queryFn: async () => (await api.get<CustomerDetail>(`/customers/${customerId}`)).data,
-    enabled: open && !!customerId && mode === 'existing',
+    enabled: !!customerId && mode === 'existing',
   });
 
   const create = useMutation({
@@ -75,24 +78,32 @@ export function CreateServiceRequestModal({
       qc.invalidateQueries({ queryKey: ['customers'] });
       qc.invalidateQueries({ queryKey: ['customer'] });
       qc.invalidateQueries({ queryKey: ['dashboard-summary'] });
-      form.resetFields();
-      onCreated(sr.id);
+      navigate(`/service-requests/${sr.id}`, { replace: true });
     },
     onError: (e) => message.error(errorMessage(e)),
   });
 
+  // Preselect the customer's default (or only) address once their record loads.
+  useEffect(() => {
+    const c = customer.data;
+    if (!c?.addresses.length || form.getFieldValue('addressId')) return;
+    form.setFieldValue('addressId', (c.addresses.find((a) => a.isDefault) ?? c.addresses[0]).id);
+  }, [customer.data, form]);
+
+  const fixedCustomer = fixedCustomerId ? customer.data : undefined;
+
   return (
-    <Modal
-      open={open}
+    <>
+    <PageHeader
+      crumbs={[
+        { title: 'طلبات الخدمة', to: '/service-requests' },
+        ...(fixedCustomer ? [{ title: fixedCustomer.name, to: `/customers/${fixedCustomer.id}` }] : []),
+        { title: 'طلب جديد' },
+      ]}
       title="طلب خدمة جديد"
-      onCancel={onClose}
-      onOk={() => form.submit()}
-      okText="إنشاء الطلب"
-      cancelText="إلغاء"
-      confirmLoading={create.isPending}
-      width={720}
-      destroyOnHidden
-    >
+      subtitle={fixedCustomer ? `للعميل ${fixedCustomer.name} — ${fixedCustomer.phone}` : 'حجز زيارة من المكتب، مع إمكانية تسجيل عميل جديد في نفس الخطوة'}
+    />
+    <Card style={{ maxWidth: 860 }}>
       <Form<Values>
         form={form}
         layout="vertical"
@@ -212,7 +223,12 @@ export function CreateServiceRequestModal({
         <Form.Item name="description" label="وصف المشكلة / ملاحظات">
           <Input.TextArea rows={3} />
         </Form.Item>
+        <Flex gap={8}>
+          <Button type="primary" htmlType="submit" loading={create.isPending}>إنشاء الطلب</Button>
+          <Button onClick={() => navigate(-1)}>إلغاء</Button>
+        </Flex>
       </Form>
-    </Modal>
+    </Card>
+    </>
   );
 }

@@ -4,13 +4,13 @@ import {
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { api, type Page } from '../../lib/api';
 import { useTabParam } from '../../lib/useOpenParam';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtMoney } from '../../lib/format';
 import { PAYMENT_METHOD, SERVICE_KIND, SERVICE_STATUS, type PaymentMethod, type ServiceKind, type ServiceStatus } from '../../lib/labels';
-import { CreateServiceRequestModal } from '../service-requests/CreateServiceRequestModal';
 
 interface Summary {
   sales: {
@@ -210,8 +210,8 @@ function DueTab() {
   const { can } = useAuth();
   const [days, setDays] = useState(14);
   const [page, setPage] = useState(1);
-  const [booking, setBooking] = useState<number | null>(null);
-  const { data, isFetching, refetch } = useQuery({
+  const navigate = useNavigate();
+  const { data, isFetching } = useQuery({
     queryKey: ['maintenance-due', days, page],
     queryFn: async () => (await api.get<Page<DueRow>>('/maintenance/due', { params: { days, page } })).data,
     placeholderData: keepPreviousData,
@@ -247,18 +247,10 @@ function DueTab() {
             title: '',
             render: (_, r) => r.serviceRequests[0]
               ? <Tag color="geekblue">{r.serviceRequests[0].number}</Tag>
-              : can('service.write') && <Button size="small" type="primary" onClick={() => setBooking(r.customer.id)}>حجز زيارة</Button>,
+              : can('service.write') && <Button size="small" type="primary" onClick={() => navigate(`/service-requests/new?customerId=${r.customer.id}`)}>حجز زيارة</Button>,
           },
         ]}
       />
-      {booking != null && (
-        <CreateServiceRequestModal
-          open
-          customerId={booking}
-          onClose={() => setBooking(null)}
-          onCreated={() => { setBooking(null); refetch(); }}
-        />
-      )}
     </>
   );
 }

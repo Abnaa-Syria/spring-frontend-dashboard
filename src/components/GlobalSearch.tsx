@@ -53,18 +53,18 @@ export function GlobalSearch() {
     data.requests.length && {
       label: 'طلبات الخدمة',
       options: data.requests.map((r) => ({
-        value: `/service-requests?open=${r.id}`,
+        value: `/service-requests/${r.id}`,
         label: row(<ToolOutlined />, r.number, `${r.customer.name} · ${SERVICE_KIND[r.kind].label} · ${SERVICE_STATUS[r.status].label}`),
       })),
     },
     data.orders.length && {
       label: 'طلبات المتجر',
-      options: data.orders.map((o) => ({ value: `/orders?open=${o.id}`, label: row(<ShoppingCartOutlined />, o.number, o.customer.name) })),
+      options: data.orders.map((o) => ({ value: `/orders/${o.id}`, label: row(<ShoppingCartOutlined />, o.number, o.customer.name) })),
     },
     data.invoices.length && {
       label: 'الفواتير',
       options: data.invoices.map((i) => ({
-        value: `/invoices?open=${i.id}`,
+        value: `/invoices/${i.id}`,
         label: row(<FileTextOutlined />, i.number, `${i.customer?.name ?? '—'} · ${fmtMoney(i.total)}`),
       })),
     },

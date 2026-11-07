@@ -1,8 +1,8 @@
 import {
-  CheckCircleOutlined, DollarOutlined, PhoneOutlined, RiseOutlined, StarOutlined, WalletOutlined,
+  CheckCircleOutlined, DollarOutlined, EditOutlined, PhoneOutlined, RiseOutlined, StarOutlined, WalletOutlined,
 } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, Badge, Card, Col, Empty, Flex, Row, Skeleton, Space, Table, Tabs, Tag, Typography } from 'antd';
+import { Avatar, Badge, Button, Card, Col, Empty, Flex, Row, Skeleton, Space, Table, Tabs, Tag, Typography } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { EnumTag } from '../../components/EnumTag';
 import { PageHeader } from '../../components/PageHeader';
@@ -67,7 +67,11 @@ export function TechnicianDetailPage() {
 
   return (
     <>
-      <PageHeader crumbs={[{ title: 'الفنيين', to: '/technicians' }, { title: t.name }]} title={t.name} />
+      <PageHeader
+        crumbs={[{ title: 'الفنيين', to: '/technicians' }, { title: t.name }]}
+        title={t.name}
+        actions={can('technician.write') && <Button icon={<EditOutlined />} onClick={() => navigate(`/technicians/${t.id}/edit`)}>تعديل البيانات</Button>}
+      />
 
       <Card style={{ marginBottom: 16 }}>
         <Flex gap={20} wrap align="center">
@@ -104,8 +108,8 @@ export function TechnicianDetailPage() {
           <StatCard
             tone={t.stats.cashInHand > 0 ? 'red' : 'teal'} icon={<WalletOutlined />} label="نقدية في العهدة"
             value={<span style={{ fontSize: 20 }}>{fmtMoney(t.stats.cashInHand)}</span>}
-            hint={can('custody.read') ? 'مراجعة التوريدات' : undefined}
-            onClick={can('custody.read') ? () => navigate('/invoices?tab=cash') : undefined}
+            hint={can('custody.read') ? 'كشف حساب العهدة' : undefined}
+            onClick={can('custody.read') ? () => navigate(`/invoices/cash/${t.id}`) : undefined}
           />
         </Col>
       </Row>
@@ -120,7 +124,7 @@ export function TechnicianDetailPage() {
               label: <Space size={6}>المهام المفتوحة<Badge count={t.open.length} size="small" /></Space>,
               children: (
                 <Table<Task> rowKey="id" dataSource={t.open} pagination={false} scroll={{ x: 760 }} columns={taskColumns(false)}
-                  rowClassName="clickable" onRow={(r) => ({ onClick: () => navigate(`/service-requests?open=${r.id}`) })}
+                  rowClassName="clickable" onRow={(r) => ({ onClick: () => navigate(`/service-requests/${r.id}`) })}
                   locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="لا توجد مهام مفتوحة" /> }} />
               ),
             },
@@ -129,7 +133,7 @@ export function TechnicianDetailPage() {
               label: 'آخر الزيارات المنجزة',
               children: (
                 <Table<Task> rowKey="id" dataSource={t.recent} pagination={false} scroll={{ x: 760 }} columns={taskColumns(true)}
-                  rowClassName="clickable" onRow={(r) => ({ onClick: () => navigate(`/service-requests?open=${r.id}`) })}
+                  rowClassName="clickable" onRow={(r) => ({ onClick: () => navigate(`/service-requests/${r.id}`) })}
                   locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="لا توجد زيارات منجزة" /> }} />
               ),
             },

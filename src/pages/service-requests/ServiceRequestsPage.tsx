@@ -2,20 +2,17 @@ import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { App, Button, Card, Input, Select, Space, Switch, Table, Typography } from 'antd';
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { EnumTag } from '../../components/EnumTag';
 import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage, type Page } from '../../lib/api';
 import { downloadCsv, fetchAll } from '../../lib/export';
-import { useOpenParam } from '../../lib/useOpenParam';
 import { useAuth } from '../../lib/auth';
 import { fmtDate, fmtDateTime } from '../../lib/format';
 import {
   PRIORITY, SERVICE_KIND, SERVICE_STATUS, SOURCE, options, type ServiceKind, type ServicePriority,
   type ServiceStatus,
 } from '../../lib/labels';
-import { CreateServiceRequestModal } from './CreateServiceRequestModal';
-import { ServiceRequestDrawer } from './ServiceRequestDrawer';
 import type { ServiceRequestRow } from './types';
 
 /** `dispatch` mode is the "توزيع المهام" screen: open requests with no technician yet. */
@@ -24,9 +21,8 @@ export function ServiceRequestsPage({ dispatch = false }: { dispatch?: boolean }
   const [params, setParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const { message } = App.useApp();
-  const [openId, setOpenId] = useOpenParam();
+  const navigate = useNavigate();
   const [exporting, setExporting] = useState(false);
-  const [creating, setCreating] = useState(false);
 
   const filters = {
     search: params.get('search') ?? undefined,
@@ -83,7 +79,7 @@ export function ServiceRequestsPage({ dispatch = false }: { dispatch?: boolean }
       subtitle={dispatch ? 'طلبات مفتوحة لسه محتاجة فني — افتح الطلب وعيّن الفني والموعد' : `${data?.total ?? '…'} طلب`}
       actions={<>
         <Button icon={<DownloadOutlined />} loading={exporting} onClick={exportCsv}>تصدير Excel</Button>
-        {can('service.write') && <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreating(true)}>طلب جديد</Button>}
+        {can('service.write') && <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/service-requests/new')}>طلب جديد</Button>}
       </>}
     />
     <Card className="table-card">
@@ -117,7 +113,7 @@ export function ServiceRequestsPage({ dispatch = false }: { dispatch?: boolean }
         dataSource={data?.items}
         scroll={{ x: 1000 }}
         rowClassName="clickable"
-        onRow={(r) => ({ onClick: () => setOpenId(r.id) })}
+        onRow={(r) => ({ onClick: () => navigate(`/service-requests/${r.id}`) })}
         pagination={{ current: page, pageSize: 20, total: data?.total, onChange: setPage, showSizeChanger: false }}
         columns={[
           { title: 'رقم الطلب', dataIndex: 'number', width: 120 },
@@ -144,14 +140,7 @@ export function ServiceRequestsPage({ dispatch = false }: { dispatch?: boolean }
           { title: 'المصدر', dataIndex: 'source', render: (v: ServiceRequestRow['source']) => SOURCE[v].label },
         ]}
       />
-
     </Card>
-      <ServiceRequestDrawer id={openId} onClose={() => setOpenId(null)} />
-      <CreateServiceRequestModal
-        open={creating}
-        onClose={() => setCreating(false)}
-        onCreated={(id) => { setCreating(false); setOpenId(id); }}
-      />
     </>
   );
 }

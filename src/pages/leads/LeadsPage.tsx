@@ -1,25 +1,25 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
-  App, Badge, Button, Card, Col, Form, Input, Modal, Row, Select, Space, Statistic, Table, Tag, Typography,
+  App, Badge, Button, Card, Col, Input, Row, Select, Space, Statistic, Table, Tag, Typography,
 } from 'antd';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api, errorMessage, type Page } from '../../lib/api';
 import { DownloadOutlined } from '@ant-design/icons';
 import { PageHeader } from '../../components/PageHeader';
 import { downloadCsv, fetchAll } from '../../lib/export';
-import { useAuth } from '../../lib/auth';
 import { fmtDateTime } from '../../lib/format';
 
-type LeadStatus = 'NEW' | 'CONTACTED' | 'WON' | 'LOST';
-const LEAD_STATUS: Record<LeadStatus, { label: string; color: string }> = {
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'WON' | 'LOST';
+export const LEAD_STATUS: Record<LeadStatus, { label: string; color: string }> = {
   NEW: { label: 'جديد', color: 'blue' },
   CONTACTED: { label: 'تم التواصل', color: 'orange' },
   WON: { label: 'تم البيع', color: 'green' },
   LOST: { label: 'لم يتم', color: 'red' },
 };
-const REFERRER_TYPE: Record<string, string> = { TECHNICIAN: 'فني', SALES_REP: 'مندوب', STAFF: 'موظف', CUSTOMER: 'عميل' };
+export const REFERRER_TYPE: Record<string, string> = { TECHNICIAN: 'فني', SALES_REP: 'مندوب', STAFF: 'موظف', CUSTOMER: 'عميل' };
 
-interface Lead {
+export interface Lead {
   id: number;
   customerName: string;
   phone: string;
@@ -35,10 +35,9 @@ interface Lead {
 }
 
 export function LeadsPage() {
-  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<{ search?: string; status?: LeadStatus; assigneeId?: number }>({});
-  const [editing, setEditing] = useState<Lead | null>(null);
+  const navigate = useNavigate();
 
   const { data, isFetching } = useQuery({
     queryKey: ['leads', filters, page],
@@ -119,8 +118,8 @@ export function LeadsPage() {
         loading={isFetching}
         dataSource={data?.items}
         scroll={{ x: 1000 }}
-        rowClassName={can('lead.write') ? 'clickable' : undefined}
-        onRow={(l) => ({ onClick: () => can('lead.write') && setEditing(l) })}
+        rowClassName="clickable"
+        onRow={(l) => ({ onClick: () => navigate(`/leads/${l.id}`) })}
         pagination={{ current: page, pageSize: 20, total: data?.total, onChange: setPage, showSizeChanger: false }}
         columns={[
           { title: 'التاريخ', dataIndex: 'createdAt', render: fmtDateTime, width: 170 },
@@ -134,58 +133,6 @@ export function LeadsPage() {
         ]}
       />
     </Card>
-    <LeadModal lead={editing} assignees={assignees.data ?? []} onClose={() => setEditing(null)} />
     </>
-  );
-}
-
-function LeadModal({ lead, assignees, onClose }: {
-  lead: Lead | null; assignees: { id: number; name: string }[]; onClose: () => void;
-}) {
-  const [form] = Form.useForm();
-  const { message } = App.useApp();
-  const qc = useQueryClient();
-  const status = Form.useWatch('status', form) as LeadStatus | undefined;
-  const save = useMutation({
-    mutationFn: (v: { status: LeadStatus; assigneeId?: number; outcomeNote?: string }) =>
-      api.patch(`/leads/${lead!.id}`, { ...v, assigneeId: v.assigneeId ?? null }),
-    onSuccess: () => {
-      message.success('تم تحديث الترشيح');
-      qc.invalidateQueries({ queryKey: ['leads'] });
-      onClose();
-    },
-    onError: (e) => message.error(errorMessage(e)),
-  });
-  const closed = !!lead?.closedAt;
-
-  return (
-    <Modal open={!!lead} title={lead ? `${lead.customerName} — ${lead.phone}` : ''} onCancel={onClose} onOk={() => form.submit()}
-      okText="حفظ" cancelText="إلغاء" confirmLoading={save.isPending} destroyOnHidden>
-      {lead && (
-        <Typography.Paragraph type="secondary">
-          رشّحه {lead.referrer.name} — {fmtDateTime(lead.createdAt)}
-          {lead.product && <> — مهتم بـ {lead.product.nameAr}</>}
-          {lead.notes && <><br />{lead.notes}</>}
-        </Typography.Paragraph>
-      )}
-      <Form form={form} layout="vertical" preserve={false} onFinish={save.mutate}
-        initialValues={lead ? { status: lead.status, assigneeId: lead.assignee?.id, outcomeNote: lead.outcomeNote ?? undefined } : undefined}>
-        <Form.Item name="status" label="الحالة">
-          <Select options={(Object.keys(LEAD_STATUS) as LeadStatus[])
-            .filter((s) => !closed || s === 'WON' || s === 'LOST')
-            .map((s) => ({ value: s, label: LEAD_STATUS[s].label }))} />
-        </Form.Item>
-        <Form.Item name="assigneeId" label="المسؤول عن المتابعة">
-          <Select allowClear options={assignees.map((u) => ({ value: u.id, label: u.name }))} />
-        </Form.Item>
-        <Form.Item
-          name="outcomeNote"
-          label={status === 'LOST' ? 'سبب عدم إتمام البيع' : 'ملاحظات المتابعة (العربون، الجهاز المتفق عليه…)'}
-          rules={[{ required: status === 'LOST', message: 'اذكر السبب' }]}
-        >
-          <Input.TextArea rows={3} />
-        </Form.Item>
-      </Form>
-    </Modal>
   );
 }
