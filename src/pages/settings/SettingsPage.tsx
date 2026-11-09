@@ -5,6 +5,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage, tokenStore } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { useTabParam } from '../../lib/useOpenParam';
+import { LegalTab } from './LegalTab';
 import { RolesTab, UsersTab } from './UsersTabs';
 
 export function SettingsPage() {
@@ -12,7 +13,10 @@ export function SettingsPage() {
   const [tab, setTab] = useTabParam('account');
   const items = [
     { key: 'account', label: 'حسابي', children: <AccountTab /> },
-    ...(can('settings.write') ? [{ key: 'system', label: 'إعدادات النظام', children: <SystemTab /> }] : []),
+    ...(can('settings.write') ? [
+      { key: 'system', label: 'إعدادات النظام', children: <SystemTab /> },
+      { key: 'legal', label: 'الشروط وسياسة الخصوصية', children: <LegalTab /> },
+    ] : []),
     ...(can('user.manage') ? [
       { key: 'users', label: 'المستخدمين', children: <UsersTab /> },
       { key: 'roles', label: 'الأدوار والصلاحيات', children: <RolesTab /> },
@@ -126,7 +130,7 @@ function SystemTab() {
           </Form.Item>
         </Col>
       </Row>
-      <Divider titlePlacement="start">بيانات الشركة (تظهر في التطبيق والفواتير)</Divider>
+      <Divider titlePlacement="start">بيانات الشركة والتواصل (تظهر في التطبيقين والفواتير والصفحات القانونية)</Divider>
       <Row gutter={16}>
         <Col xs={24} md={12}>
           <Form.Item name="company__name" label="اسم الشركة"><Input maxLength={120} /></Form.Item>
@@ -136,6 +140,9 @@ function SystemTab() {
         </Col>
         <Col xs={24} md={12}>
           <Form.Item name="company__whatsapp" label="رقم واتساب"><Input dir="ltr" placeholder="+2010xxxxxxxx" /></Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item name="company__email" label="البريد الإلكتروني للدعم" rules={[{ type: 'email', message: 'بريد غير صحيح' }]}><Input dir="ltr" placeholder="support@example.com" /></Form.Item>
         </Col>
       </Row>
       <Divider titlePlacement="start">المخزون</Divider>
