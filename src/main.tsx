@@ -28,6 +28,7 @@ const LeadsPage = page(async () => (await import('./pages/leads/LeadsPage')).Lea
 const OrdersPage = page(async () => (await import('./pages/orders/OrdersPage')).OrdersPage);
 const ReportsPage = page(async () => (await import('./pages/reports/ReportsPage')).ReportsPage);
 const SettingsPage = page(async () => (await import('./pages/settings/SettingsPage')).SettingsPage);
+const ZonesPage = page(async () => (await import('./pages/zones/ZonesPage')).ZonesPage);
 
 // Detail and form pages (every view/edit is a page of its own, no popups).
 const ServiceRequestDetailPage = page(async () => (await import('./pages/service-requests/ServiceRequestDetailPage')).ServiceRequestDetailPage);
@@ -95,6 +96,7 @@ createRoot(document.getElementById('root')!).render(
                   <Route path="orders" element={<OrdersPage />} />
                   <Route path="orders/:id" element={<OrderDetailPage />} />
                   <Route path="reports" element={<ReportsPage />} />
+                  <Route path="zones" element={<ZonesPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="settings/users/new" element={<UserFormPage key="new" />} />
                   <Route path="settings/users/:id/edit" element={<UserFormPage key="edit" />} />

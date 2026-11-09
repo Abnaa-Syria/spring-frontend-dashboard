@@ -1,5 +1,5 @@
 import {
-  AppstoreOutlined, BarChartOutlined, CalendarOutlined, DashboardOutlined, DropboxOutlined, RiseOutlined,
+  AppstoreOutlined, BarChartOutlined, CalendarOutlined, DashboardOutlined, DropboxOutlined, EnvironmentOutlined, RiseOutlined,
   SettingOutlined, ShoppingCartOutlined, TeamOutlined, ToolOutlined, UserOutlined, WalletOutlined,
 } from '@ant-design/icons';
 import type { ReactNode } from 'react';
@@ -27,6 +27,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { path: '/service-requests', label: 'طلبات الخدمة', icon: <ToolOutlined />, permission: 'service.read' },
       { path: '/technicians', label: 'الفنيين', icon: <TeamOutlined />, permission: 'technician.read' },
       { path: '/customers', label: 'العملاء', icon: <UserOutlined />, permission: 'customer.read' },
+      { path: '/zones', label: 'مناطق الخدمة والتسعير', icon: <EnvironmentOutlined />, permission: 'service.read' },
     ],
   },
   {

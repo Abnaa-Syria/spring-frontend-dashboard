@@ -1,8 +1,7 @@
 import { CloseCircleOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  App, Button, Card, Col, DatePicker, Descriptions, Empty, Flex, Form, Grid, Image, Input, Popconfirm, Row, Skeleton,
-  Space, Table, Tag, Timeline, Typography,
+  App, Button, Card, Col, DatePicker, Descriptions, Empty, Flex, Form, Grid, Image, Input, InputNumber, Popconfirm, Row, Skeleton, Space, Table, Tag, Timeline, Typography,
 } from 'antd';
 import dayjs, { type Dayjs } from 'dayjs';
 import { useState } from 'react';
@@ -13,7 +12,7 @@ import { LocationView, toLatLng } from '../../components/LocationMap';
 import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { fmtAddress, fmtDate, fmtDateTime } from '../../lib/format';
+import { fmtAddress, fmtDate, fmtDateTime, fmtMoney } from '../../lib/format';
 import {
   PRIORITY, SERVICE_KIND, SERVICE_STATUS, SOURCE, SPECIALIZATION, type ServiceStatus,
 } from '../../lib/labels';
@@ -101,6 +100,9 @@ export function ServiceRequestDetailPage() {
                   {r.technician
                     ? <Link to={`/technicians/${r.technician.id}`}>{r.technician.user.name} ({r.technician.code})</Link>
                     : <Typography.Text type="danger">غير محدد</Typography.Text>}
+                </Descriptions.Item>
+                <Descriptions.Item label="رسوم الزيارة">
+                  <FeeEditor request={r} canEdit={can('service.write')} onDone={refresh} />
                 </Descriptions.Item>
                 <Descriptions.Item label="التخصص المطلوب">
                   <EnumTag map={SPECIALIZATION} value={r.requiredSpecialization} />
@@ -191,6 +193,36 @@ export function ServiceRequestDetailPage() {
   );
 }
 
+/** Visit fee locked at booking; editable until the visit is invoiced (e.g. free under warranty). */
+function FeeEditor({ request, canEdit, onDone }: { request: ServiceRequestDetail; canEdit: boolean; onDone: () => void }) {
+  const { message } = App.useApp();
+  const [editing, setEditing] = useState(false);
+  const [fee, setFee] = useState<number | null>(request.serviceFee != null ? Number(request.serviceFee) : null);
+  const [reason, setReason] = useState('');
+  const save = useMutation({
+    mutationFn: () => api.put(`/service-requests/${request.id}/service-fee`, { serviceFee: fee ?? 0, reason }),
+    onSuccess: () => { message.success('تم تعديل رسوم الزيارة'); setEditing(false); setReason(''); onDone(); },
+    onError: (e) => message.error(errorMessage(e)),
+  });
+  const locked = !!request.invoice || request.status === 'CANCELLED';
+  if (!editing) {
+    return (
+      <Space>
+        {request.serviceFee != null ? fmtMoney(request.serviceFee) : <Typography.Text type="secondary">حسب الأسعار الحالية</Typography.Text>}
+        {canEdit && !locked && <Button size="small" type="link" onClick={() => setEditing(true)}>تعديل</Button>}
+      </Space>
+    );
+  }
+  return (
+    <Flex gap={8} wrap align="center">
+      <InputNumber min={0} max={100000} value={fee} onChange={(v) => setFee(v == null ? null : Number(v))} suffix="ج.م" style={{ width: 130 }} />
+      <Input placeholder="السبب (مثلاً: زيارة ضمان)" value={reason} onChange={(e) => setReason(e.target.value)} style={{ width: 220 }} />
+      <Button size="small" type="primary" disabled={reason.trim().length < 3} loading={save.isPending} onClick={() => save.mutate()}>حفظ</Button>
+      <Button size="small" onClick={() => setEditing(false)}>إلغاء</Button>
+    </Flex>
+  );
+}
+
 function AssignPanel({ request, onDone }: { request: ServiceRequestDetail; onDone: () => void }) {
   const { message } = App.useApp();
   const [reason, setReason] = useState('');
@@ -232,7 +264,15 @@ function AssignPanel({ request, onDone }: { request: ServiceRequestDetail; onDon
           scroll={{ x: 560 }}
           columns={[
             { title: 'الفني', render: (_, t) => <>{t.name} <Typography.Text type="secondary">({t.code})</Typography.Text></> },
-            { title: 'المنطقة', dataIndex: 'serviceArea', render: (v) => v ?? '—' },
+            {
+              title: 'المنطقة',
+              render: (_, t) => (
+                <Flex vertical gap={2}>
+                  {t.coversArea ? <Tag color="green" style={{ width: 'fit-content' }}>بيغطي {data.governorate}</Tag> : <Tag style={{ width: 'fit-content' }}>خارج محافظاته</Tag>}
+                  {t.serviceArea && <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t.serviceArea}</Typography.Text>}
+                </Flex>
+              ),
+            },
             {
               title: 'مهام اليوم',
               render: (_, t) => (

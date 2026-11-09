@@ -21,6 +21,8 @@ export interface ServiceRequestRow {
 export interface ServiceRequestDetail extends Omit<ServiceRequestRow, 'address' | 'technician' | 'customer'> {
   description: string | null;
   cancelReason: string | null;
+  serviceFee: string | null;
+  invoice?: { id: number } | null;
   requiredSpecialization: Specialization;
   customer: { id: number; name: string; phone: string; altPhone: string | null };
   address: {
@@ -45,8 +47,10 @@ export interface ServiceRequestDetail extends Omit<ServiceRequestRow, 'address' 
 export interface EligibleTechnicians {
   specialization: Specialization;
   day: string;
+  governorate: string;
   technicians: {
     id: number; code: string; name: string; phone: string | null; serviceArea: string | null;
+    governorates: string[]; coversArea: boolean;
     specializations: Specialization[]; openTasks: number; tasksThatDay: number;
     scheduleThatDay: { number: string; scheduledAt: string; kind: ServiceKind }[];
   }[];

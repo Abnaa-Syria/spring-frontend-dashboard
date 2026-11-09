@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Col, DatePicker, Divider, Flex, Form, Input, Radio, Row, Select } from 'antd';
+import { App, Button, Card, Col, DatePicker, Divider, Flex, Form, Input, InputNumber, Radio, Row, Select } from 'antd';
 import type { Dayjs } from 'dayjs';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -24,6 +24,7 @@ interface Values {
   preferredSlot?: string;
   scheduledAt?: Dayjs;
   description?: string;
+  serviceFee?: number | null;
 }
 
 /** Office booking (usually from a phone call). Can create the customer in the same step. */
@@ -37,6 +38,12 @@ export function ServiceRequestCreatePage() {
   const [search, setSearch] = useState('');
   const mode = Form.useWatch('customerMode', form) ?? 'existing';
   const customerId = Form.useWatch('customerId', form) ?? fixedCustomerId;
+  const kind = Form.useWatch('kind', form);
+  const coverage = useQuery({
+    queryKey: ['coverage'],
+    queryFn: async () => (await api.get<{ serviceFees: Record<ServiceKind, number> }>('/coverage')).data,
+  });
+  const defaultFee = kind ? coverage.data?.serviceFees[kind] : undefined;
 
   const customers = useQuery({
     queryKey: ['customers', 'lookup', search],
@@ -69,6 +76,7 @@ export function ServiceRequestCreatePage() {
         preferredSlot: v.preferredSlot,
         scheduledAt: v.scheduledAt?.toISOString(),
         description: v.description,
+        ...(v.serviceFee != null && { serviceFee: v.serviceFee }),
       });
       return data;
     },
@@ -197,6 +205,12 @@ export function ServiceRequestCreatePage() {
           <Col xs={24} md={12}>
             <Form.Item name="kind" label="نوع الخدمة" rules={[{ required: true, message: 'اختر نوع الخدمة' }]}>
               <Select options={options(SERVICE_KIND)} />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="serviceFee" label="رسوم الزيارة"
+              extra={defaultFee != null ? `سيبها فاضية عشان تتحسب من الأسعار (${defaultFee} ج.م). اكتب ٠ لو الزيارة في الضمان.` : 'اختر نوع الخدمة الأول'}>
+              <InputNumber min={0} max={100000} placeholder={defaultFee != null ? String(defaultFee) : ''} suffix="ج.م" style={{ width: '100%' }} />
             </Form.Item>
           </Col>
           <Col xs={24} md={12}>

@@ -1,15 +1,16 @@
 import { LockOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { App, Button, Card, Checkbox, Col, Flex, Form, Input, Row, Skeleton, Switch, Typography } from 'antd';
+import { App, Button, Card, Checkbox, Col, Flex, Form, Input, Row, Skeleton, Switch, Typography, Select } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage } from '../../lib/api';
+import { EGYPT_GOVERNORATES } from '../../lib/governorates';
 import { SPECIALIZATION, options, type Specialization } from '../../lib/labels';
 import { PHONE_RULE } from '../../lib/validation';
 
 interface Technician {
   id: number; code: string; name: string; username: string; phone: string | null; isActive: boolean;
-  isAvailable: boolean; serviceArea: string | null; specializations: Specialization[];
+  isAvailable: boolean; serviceArea: string | null; governorates: string[]; specializations: Specialization[];
 }
 
 /** /technicians/new and /technicians/:id/edit */
@@ -57,7 +58,7 @@ export function TechnicianFormPage() {
             layout="vertical"
             onFinish={save.mutate}
             initialValues={existing
-              ? { name: existing.name, phone: existing.phone ?? undefined, code: existing.code, serviceArea: existing.serviceArea ?? undefined,
+              ? { name: existing.name, phone: existing.phone ?? undefined, code: existing.code, serviceArea: existing.serviceArea ?? undefined, governorates: existing.governorates ?? [],
                   specializations: existing.specializations, isAvailable: existing.isAvailable, isActive: existing.isActive }
               : { specializations: [] }}
           >
@@ -93,8 +94,13 @@ export function TechnicianFormPage() {
                   <Checkbox.Group options={options(SPECIALIZATION)} />
                 </Form.Item>
               </Col>
-              <Col span={24}>
-                <Form.Item name="serviceArea" label="منطقة العمل"><Input placeholder="مثال: مدينة نصر، مصر الجديدة" /></Form.Item>
+              <Col xs={24} md={12}>
+                <Form.Item name="governorates" label="المحافظات اللي بيغطيها" extra="الفنيين اللي بيغطّوا محافظة العميل بيظهروا الأول وقت التعيين">
+                  <Select mode="multiple" allowClear placeholder="اختر المحافظات" options={EGYPT_GOVERNORATES.map((g) => ({ value: g, label: g }))} optionFilterProp="label" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item name="serviceArea" label="الأحياء (وصف)"><Input placeholder="مثال: مدينة نصر، مصر الجديدة" /></Form.Item>
               </Col>
               {existing && (
                 <>
