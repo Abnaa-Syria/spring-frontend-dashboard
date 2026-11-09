@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { EnumTag } from '../../components/EnumTag';
 import { PrivateImage } from '../../components/FileLink';
+import { LocationView, toLatLng } from '../../components/LocationMap';
 import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -107,6 +108,19 @@ export function ServiceRequestDetailPage() {
                 {r.description && <Descriptions.Item label="وصف المشكلة" span="filled">{r.description}</Descriptions.Item>}
                 {r.cancelReason && <Descriptions.Item label="سبب الإلغاء" span="filled">{r.cancelReason}</Descriptions.Item>}
               </Descriptions>
+            </Card>
+
+            <Card title="الموقع على الخريطة" size="small">
+              {(() => {
+                const p = toLatLng(r.address.latitude, r.address.longitude);
+                return p ? <LocationView point={p} /> : (
+                  <Typography.Text type="secondary">
+                    العميل لسه محددش الموقع. ممكن تحدده من{' '}
+                    <Link to={`/customers/${r.customer.id}/addresses/${r.address.id}/edit`}>تعديل العنوان</Link>
+                    ، أو الفني يحدده من التطبيق وهو عند العميل.
+                  </Typography.Text>
+                );
+              })()}
             </Card>
 
             {canDispatch && can('service.assign') && (

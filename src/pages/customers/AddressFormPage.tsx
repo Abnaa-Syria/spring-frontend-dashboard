@@ -57,7 +57,12 @@ export function AddressFormPage() {
           form={form}
           layout="vertical"
           onFinish={save.mutate}
-          initialValues={editing ? { ...editing, label: editing.label ?? undefined } : undefined}
+          initialValues={editing ? {
+            ...editing,
+            label: editing.label ?? undefined,
+            latitude: editing.latitude != null ? Number(editing.latitude) : null,
+            longitude: editing.longitude != null ? Number(editing.longitude) : null,
+          } : undefined}
         >
           <Form.Item name="label" label="اسم العنوان"><Input placeholder="المنزل، العمل…" /></Form.Item>
           <AddressFields />
