@@ -26,6 +26,7 @@ export interface ServiceRequestDetail extends Omit<ServiceRequestRow, 'address' 
   address: {
     id: number; governorate: string; city: string; area: string | null; street: string | null;
     building: string | null; floor: string | null; apartment: string | null; details: string | null;
+    latitude: string | null; longitude: string | null;
   };
   device: { id: number; modelName: string; serialNumber: string | null; product: { nameAr: string } | null } | null;
   technician: { id: number; code: string; user: { name: string; phone: string | null } } | null;

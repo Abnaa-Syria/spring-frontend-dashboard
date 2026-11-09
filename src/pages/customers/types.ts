@@ -11,6 +11,8 @@ export interface Address {
   floor: string | null;
   apartment: string | null;
   details: string | null;
+  latitude: string | null;
+  longitude: string | null;
   isDefault: boolean;
 }
 
