@@ -64,7 +64,7 @@ export function OrdersPage() {
               hoverable
               onClick={() => setStatus(active ? undefined : s)}
               styles={{ body: { padding: 14 } }}
-              style={active ? { borderColor: '#2E508F', boxShadow: '0 0 0 1px #2E508F' } : undefined}
+              style={active ? { borderColor: 'var(--c-primary)', boxShadow: '0 0 0 1px var(--c-primary)' } : undefined}
             >
               <Statistic title={<Space size={6}><Badge color={STATUS[s].color} />{STATUS[s].label}</Space>} value={data?.byStatus[s] ?? 0} />
             </Card>

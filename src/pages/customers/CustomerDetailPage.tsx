@@ -59,7 +59,7 @@ export function CustomerDetailPage() {
 
       <Card style={{ marginBottom: 16 }}>
         <Flex gap={20} wrap align="center">
-          <Avatar size={64} style={{ background: '#E8EFFA', color: '#2E508F', fontSize: 26, fontWeight: 800 }}>
+          <Avatar size={64} style={{ background: 'var(--tone-blue-bg)', color: 'var(--tone-blue-fg)', fontSize: 26, fontWeight: 800 }}>
             {c.name.trim().charAt(0)}
           </Avatar>
           <Flex vertical gap={6} style={{ flex: 1, minWidth: 240 }}>
@@ -68,7 +68,7 @@ export function CustomerDetailPage() {
               {c.userId ? <Tag color="green" icon={<MobileOutlined />}>مسجل في التطبيق</Tag> : <Tag>غير مسجل في التطبيق</Tag>}
               {c.legacyCustomerId && <Tag>النظام القديم: {c.legacyCustomerId}</Tag>}
             </Flex>
-            <Flex gap={20} wrap style={{ color: '#5B6B80' }}>
+            <Flex gap={20} wrap style={{ color: 'var(--c-muted)' }}>
               <span><PhoneOutlined /> <bdi dir="ltr">{c.phone}</bdi>{c.altPhone && <> · <bdi dir="ltr">{c.altPhone}</bdi></>}</span>
               {defaultAddress && <span><EnvironmentOutlined /> {fmtAddress(defaultAddress)}</span>}
               <span><CalendarOutlined /> عميل منذ {fmtDate(c.createdAt)}</span>
@@ -105,7 +105,7 @@ export function CustomerDetailPage() {
           items={[
             {
               key: 'devices',
-              label: <Space size={6}>الأجهزة<Badge count={c.devices.length} color="#97A6B9" size="small" /></Space>,
+              label: <Space size={6}>الأجهزة<Badge count={c.devices.length} color="var(--c-badge-muted)" size="small" /></Space>,
               children: (
                 <Table
                   rowKey="id"
@@ -226,7 +226,7 @@ export function CustomerDetailPage() {
             }] : []),
             {
               key: 'addresses',
-              label: <Space size={6}>العناوين<Badge count={c.addresses.length} color="#97A6B9" size="small" /></Space>,
+              label: <Space size={6}>العناوين<Badge count={c.addresses.length} color="var(--c-badge-muted)" size="small" /></Space>,
               children: c.addresses.length === 0 ? <Empty description="لا توجد عناوين" image={Empty.PRESENTED_IMAGE_SIMPLE} /> : (
                 <Row gutter={[12, 12]}>
                   {c.addresses.map((a) => (

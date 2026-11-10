@@ -13,6 +13,7 @@ import { useAuth } from '../../lib/auth';
 import { SERVICE_KIND, SERVICE_STATUS, type ServiceKind, type ServiceStatus } from '../../lib/labels';
 import { useTabParam } from '../../lib/useOpenParam';
 import { GovernoratesTab } from './GovernoratesTab';
+import { useThemeMode } from '../../lib/themeMode';
 
 interface Overview {
   byGovernorate: { governorate: string; customers: number; openRequests: number; technicians: number }[];
@@ -104,6 +105,7 @@ const STATUS_COLOR: Partial<Record<ServiceStatus, string>> = {
 function MapTab() {
   const { data, isLoading } = useQuery({ queryKey: ['zones-overview'], queryFn: async () => (await api.get<Overview>('/zones/overview')).data });
   const [showCustomers, setShowCustomers] = useState(true);
+  const { palette } = useThemeMode();
   if (isLoading || !data) return <Skeleton active />;
   const pts = [...data.requests, ...data.customers];
   const center: [number, number] = pts.length
@@ -122,11 +124,11 @@ function MapTab() {
       {data.pinned < data.totalAddresses && (
         <Alert type="warning" showIcon title="العناوين اللي ملهاش موقع مش بتظهر على الخريطة. الموقع بيتحدد لما العميل يعدّل عنوانه من التطبيق، أو الفني يحدده وهو عند العميل، أو من صفحة العميل هنا." />
       )}
-      <div dir="ltr" style={{ height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--ant-color-border, #e5e7eb)' }}>
+      <div dir="ltr" style={{ height: 520, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)' }}>
         <MapContainer center={center} zoom={pts.length ? 10 : 6} style={{ height: '100%', width: '100%' }}>
           <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' maxZoom={19} />
           {showCustomers && data.customers.map((c, i) => (
-            <CircleMarker key={`c${i}`} center={[c.lat, c.lng]} radius={4} pathOptions={{ color: '#2E508F', fillOpacity: 0.5, weight: 1 }}>
+            <CircleMarker key={`c${i}`} center={[c.lat, c.lng]} radius={4} pathOptions={{ color: palette.primary, fillOpacity: 0.5, weight: 1 }}>
               <Popup><div dir="rtl"><Link to={`/customers/${c.customerId}`}>{c.name}</Link></div></Popup>
             </CircleMarker>
           ))}
@@ -147,7 +149,7 @@ function MapTab() {
         {Object.entries(STATUS_COLOR).map(([s, c]) => (
           <Space key={s} size={4}><span style={{ display: 'inline-block', width: 12, height: 12, borderRadius: 6, background: c }} />{SERVICE_STATUS[s as ServiceStatus].label}</Space>
         ))}
-        {showCustomers && <Space size={4}><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, background: '#2E508F', opacity: 0.6 }} />عنوان عميل</Space>}
+        {showCustomers && <Space size={4}><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, background: 'var(--c-primary)', opacity: 0.6 }} />عنوان عميل</Space>}
       </Flex>
       <Table
         size="small"

@@ -74,7 +74,7 @@ function SummaryTab() {
             <Col xs={12} lg={6}><Card size="small"><Statistic title="إجمالي المبيعات" value={fmtMoney(d.sales.total)} /></Card></Col>
             <Col xs={12} lg={6}><Card size="small"><Statistic title={`فواتير الزيارات (${d.sales.visits.count})`} value={fmtMoney(d.sales.visits.total)} /></Card></Col>
             <Col xs={12} lg={6}><Card size="small"><Statistic title={`طلبات المتجر (${d.sales.orders.count})`} value={fmtMoney(d.sales.orders.total)} /></Card></Col>
-            <Col xs={12} lg={6}><Card size="small"><Statistic title="تحويلات بانتظار التحقق" value={fmtMoney(pendingTransfers)} styles={{ content: { color: pendingTransfers ? '#d46b08' : undefined } }} /></Card></Col>
+            <Col xs={12} lg={6}><Card size="small"><Statistic title="تحويلات بانتظار التحقق" value={fmtMoney(pendingTransfers)} styles={{ content: { color: pendingTransfers ? 'var(--c-warning)' : undefined } }} /></Card></Col>
             <Col xs={12} lg={6}><Card size="small"><Statistic title="زيارات مكتملة" value={d.services.completed} /></Card></Col>
             <Col xs={12} lg={6}>
               <Card size="small">

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { errorMessage } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { useThemeMode } from '../lib/themeMode';
 
 const POINTS = [
   'توزيع طلبات التركيب والصيانة على الفنيين ومتابعتها لحظياً',
@@ -14,6 +15,7 @@ const POINTS = [
 export function LoginPage() {
   const { user, login } = useAuth();
   const screens = Grid.useBreakpoint();
+  const { dark } = useThemeMode();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +34,7 @@ export function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: '100%', display: 'flex', background: '#fff' }}>
+    <div style={{ minHeight: '100%', display: 'flex', background: 'var(--c-surface)' }}>
       {screens.lg && (
         <div style={{
           flex: '0 0 46%', padding: 56, color: '#fff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
@@ -51,18 +53,18 @@ export function LoginPage() {
           <div style={{ opacity: 0.55, fontSize: 13 }}>© {new Date().getFullYear()} Spring</div>
         </div>
       )}
-      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, background: screens.lg ? '#fff' : '#F2F7FC' }}>
+      <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, background: screens.lg ? 'var(--c-surface)' : 'var(--c-bg)' }}>
         <div style={{ width: '100%', maxWidth: 380 }}>
-          {!screens.lg && <img src="/logo-color.svg" alt="Spring" style={{ height: 44, marginBottom: 24 }} />}
+          {!screens.lg && <img src={dark ? '/logo-white.svg' : '/logo-color.svg'} alt="Spring" style={{ height: 44, marginBottom: 24 }} />}
           <Typography.Title level={2} style={{ marginBottom: 4, fontWeight: 800 }}>تسجيل الدخول</Typography.Title>
           <Typography.Paragraph type="secondary" style={{ marginBottom: 28 }}>أدخل بيانات حسابك للمتابعة</Typography.Paragraph>
           {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
           <Form layout="vertical" onFinish={submit} requiredMark={false} size="large">
             <Form.Item name="username" label="اسم المستخدم أو الموبايل" rules={[{ required: true, message: 'مطلوب' }]}>
-              <Input prefix={<UserOutlined style={{ color: '#8A99AD' }} />} autoComplete="username" autoFocus />
+              <Input prefix={<UserOutlined style={{ color: 'var(--c-subtle)' }} />} autoComplete="username" autoFocus />
             </Form.Item>
             <Form.Item name="password" label="كلمة المرور" rules={[{ required: true, message: 'مطلوب' }]}>
-              <Input.Password prefix={<LockOutlined style={{ color: '#8A99AD' }} />} autoComplete="current-password" />
+              <Input.Password prefix={<LockOutlined style={{ color: 'var(--c-subtle)' }} />} autoComplete="current-password" />
             </Form.Item>
             <Button type="primary" htmlType="submit" block loading={loading} style={{ height: 46, marginTop: 8 }}>
               دخول

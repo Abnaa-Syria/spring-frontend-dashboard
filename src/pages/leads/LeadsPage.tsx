@@ -90,7 +90,7 @@ export function LeadsPage() {
         return (
           <Col key={s} xs={12} sm={8} lg={{ flex: '20%' }}>
             <Card hoverable onClick={() => update({ status: active ? undefined : s })} styles={{ body: { padding: 14 } }}
-              style={active ? { borderColor: '#2E508F', boxShadow: '0 0 0 1px #2E508F' } : undefined}>
+              style={active ? { borderColor: 'var(--c-primary)', boxShadow: '0 0 0 1px var(--c-primary)' } : undefined}>
               <Statistic title={<Space size={6}><Badge color={LEAD_STATUS[s].color} />{LEAD_STATUS[s].label}</Space>} value={data?.byStatus[s] ?? 0} />
             </Card>
           </Col>

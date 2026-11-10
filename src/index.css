@@ -1,28 +1,98 @@
+/* Colour tokens. Light is the brand look; [data-theme='dark'] is set by lib/themeMode (and index.html before paint). */
+:root {
+  --c-primary: #2E508F;
+  --c-accent: #42B8C8;
+  --c-bg: #F2F7FC;
+  --c-surface: #FFFFFF;
+  --c-elevated: #FFFFFF;
+  --c-fill: #F4F7FB;
+  --c-hover: #F6F9FC;
+  --c-border: #E6ECF3;
+  --c-border-soft: #EEF2F7;
+  --c-border-strong: #D9E1EB;
+  --c-text: #1F2A37;
+  --c-muted: #5B6B80;
+  --c-subtle: #8A99AD;
+  --c-faint: #C7D3E3;
+  --c-success: #12A150;
+  --c-warning: #D97706;
+  --c-danger: #D92D20;
+  --c-header: rgba(255, 255, 255, 0.86);
+  --c-ring: rgba(46, 80, 143, 0.14);
+  --c-unread: #EEF3FB;
+  --c-badge-muted: #97A6B9;
+  --c-card-shadow: 0 1px 2px rgba(16, 40, 80, 0.04);
+  --c-popup-shadow: 0 6px 16px rgba(16, 40, 80, 0.08);
+
+  /* Soft tinted tiles (KPI icons, avatars): background / foreground. */
+  --tone-blue-bg: #E8EFFA;   --tone-blue-fg: #2E508F;
+  --tone-teal-bg: #E3F5F8;   --tone-teal-fg: #1E8A9B;
+  --tone-green-bg: #E6F6EC;  --tone-green-fg: #12A150;
+  --tone-orange-bg: #FDF1E3; --tone-orange-fg: #C46A05;
+  --tone-red-bg: #FDECEC;    --tone-red-fg: #D92D20;
+  --tone-purple-bg: #F0EBFB; --tone-purple-fg: #6941C6;
+}
+
+:root[data-theme='dark'] {
+  --c-primary: #5287DD;
+  --c-accent: #4FC3D2;
+  --c-bg: #0B1220;
+  --c-surface: #121B2B;
+  --c-elevated: #18233A;
+  --c-fill: #182336;
+  --c-hover: #1B283D;
+  --c-border: #24324A;
+  --c-border-soft: #1D2A3F;
+  --c-border-strong: #30405C;
+  --c-text: #E4EBF4;
+  --c-muted: #9BAABF;
+  --c-subtle: #6F8098;
+  --c-faint: #3A4A64;
+  --c-success: #34C27A;
+  --c-warning: #F0A53A;
+  --c-danger: #F06A5F;
+  --c-header: rgba(13, 21, 36, 0.82);
+  --c-ring: rgba(82, 135, 221, 0.28);
+  --c-unread: #17263F;
+  --c-badge-muted: #4A5B75;
+  --c-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --c-popup-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+
+  --tone-blue-bg: rgba(82, 135, 221, 0.16);   --tone-blue-fg: #8DB3F0;
+  --tone-teal-bg: rgba(79, 195, 210, 0.14);   --tone-teal-fg: #6FD3E0;
+  --tone-green-bg: rgba(52, 194, 122, 0.14);  --tone-green-fg: #5AD496;
+  --tone-orange-bg: rgba(240, 165, 58, 0.15); --tone-orange-fg: #F5B862;
+  --tone-red-bg: rgba(240, 106, 95, 0.15);    --tone-red-fg: #F58A80;
+  --tone-purple-bg: rgba(150, 120, 230, 0.16);--tone-purple-fg: #B49CF2;
+}
+
 html, body, #root { height: 100%; margin: 0; }
 body {
   font-family: 'Cairo', system-ui, sans-serif;
-  background: #F2F7FC;
+  background: var(--c-bg);
+  color: var(--c-text);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'tnum' 1; /* aligned digits in tables */
 }
 
-/* Keyboard focus is always visible. */
-:focus-visible { outline: 2px solid #42B8C8; outline-offset: 2px; }
+/* Keyboard focus is always visible. Text fields draw their own focus ring (antd), so no extra outline there. */
+:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, .ant-select-selection-search-input:focus-visible { outline: none; }
 
 /* Thin scrollbars that match the UI. */
-* { scrollbar-width: thin; scrollbar-color: #C7D3E3 transparent; }
+* { scrollbar-width: thin; scrollbar-color: var(--c-faint) transparent; }
 
 .page { max-width: 1480px; margin-inline: auto; }
 
-/* Cards: borderless with a soft shadow, like the mobile apps. */
-.ant-card:not(.ant-card-bordered-explicit) { border: 1px solid #E6ECF3; }
-.ant-card { box-shadow: 0 1px 2px rgba(16, 40, 80, 0.04); }
-.ant-card .ant-card-head { border-bottom-color: #EEF2F7; }
+/* Cards: thin border with a soft shadow, like the mobile apps. */
+.ant-card:not(.ant-card-bordered-explicit) { border: 1px solid var(--c-border); }
+.ant-card { box-shadow: var(--c-card-shadow); }
+.ant-card .ant-card-head { border-bottom-color: var(--c-border-soft); }
 
 /* Tables inside cards sit flush. */
 .table-card .ant-card-body { padding: 0; }
 .table-card .ant-table-wrapper .ant-table { border-radius: 0 0 16px 16px; }
-.table-card .table-toolbar { padding: 16px 20px; border-bottom: 1px solid #EEF2F7; }
+.table-card .table-toolbar { padding: 16px 20px; border-bottom: 1px solid var(--c-border-soft); }
 .ant-table-row.clickable { cursor: pointer; }
 
 /* Sidebar */
@@ -31,25 +101,84 @@ body {
 .sider .ant-menu-item-group-title { padding-inline: 22px !important; margin-top: 8px; }
 .sider .ant-menu-item .anticon { font-size: 17px; }
 .sider-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.55); font-size: 12px; }
+:root[data-theme='dark'] .sider { border-inline-start: 1px solid var(--c-border-soft); }
+
+/* ---------- Top bar ---------- */
+.app-header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 12px;
+  height: 64px;
+  background: var(--c-header) !important;
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--c-border-soft);
+}
+.header-icon-btn.ant-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  color: var(--c-muted); font-size: 18px;
+}
+.header-icon-btn.ant-btn:hover { color: var(--c-text); background: var(--c-fill) !important; }
+.header-divider { width: 1px; height: 28px; background: var(--c-border); margin-inline: 4px; }
+.header-user.ant-btn { height: 46px; padding-inline: 6px 10px; border-radius: 14px; }
+.header-user.ant-btn:hover { background: var(--c-fill) !important; }
+.header-avatar.ant-avatar {
+  background: var(--tone-blue-bg); color: var(--tone-blue-fg);
+  font-weight: 800; font-size: 15px;
+}
+
+/* Global search: soft filled pill that lifts on focus. */
+.app-header { line-height: normal; }
+.global-search.ant-select { height: auto; background: transparent; display: block; }
+.global-search .ant-input-affix-wrapper {
+  height: 42px; border-radius: 12px; padding-inline: 14px;
+  background: var(--c-fill); border-color: transparent;
+  transition: background 160ms, border-color 160ms, box-shadow 160ms;
+}
+.global-search .ant-input-affix-wrapper:hover { border-color: var(--c-border-strong); background: var(--c-fill); }
+.global-search .ant-input-affix-wrapper-focused,
+.global-search .ant-input-affix-wrapper:focus-within {
+  background: var(--c-surface); border-color: var(--c-primary); box-shadow: 0 0 0 4px var(--c-ring);
+}
+.global-search .ant-input { background: transparent; font-size: 14px; }
+.global-search .ant-input::placeholder { color: var(--c-subtle); }
+.global-search .search-icon { color: var(--c-subtle); font-size: 16px; margin-inline-end: 4px; }
+.global-search .ant-input-affix-wrapper-focused .search-icon { color: var(--c-primary); }
+.kbd {
+  display: inline-flex; align-items: center; gap: 2px;
+  font: 600 11px/1 system-ui, sans-serif; direction: ltr;
+  color: var(--c-subtle); background: var(--c-surface);
+  border: 1px solid var(--c-border); border-bottom-width: 2px; border-radius: 6px;
+  padding: 3px 6px;
+}
 
 /* KPI tiles */
 .kpi { display: flex; gap: 14px; align-items: flex-start; }
 .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
-.kpi-label { color: #5B6B80; font-size: 13px; font-weight: 600; }
-.kpi-value { font-size: 26px; font-weight: 800; color: #1F2A37; line-height: 1.25; }
+.kpi-label { color: var(--c-muted); font-size: 13px; font-weight: 600; }
+.kpi-value { font-size: 26px; font-weight: 800; color: var(--c-text); line-height: 1.25; }
 .kpi-delta { font-size: 12px; font-weight: 600; }
 
 /* "Needs action" rows */
-.action-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid #EEF2F7; cursor: pointer; border-radius: 8px; transition: background 150ms; }
+.action-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--c-border-soft); cursor: pointer; border-radius: 8px; transition: background 150ms; }
 .action-row:last-child { border-bottom: none; }
-.action-row:hover { background: #F6F9FC; }
+.action-row:hover { background: var(--c-hover); }
+
+/* Maps: dim the light OpenStreetMap tiles in dark mode (markers keep their colours). */
+:root[data-theme='dark'] .leaflet-tile-pane { filter: invert(1) hue-rotate(195deg) brightness(0.92) contrast(0.88) saturate(0.55); }
+:root[data-theme='dark'] .leaflet-container { background: #0E1626; }
+:root[data-theme='dark'] .leaflet-bar a,
+:root[data-theme='dark'] .leaflet-control-attribution { background: var(--c-elevated); color: var(--c-muted); border-color: var(--c-border); }
+:root[data-theme='dark'] .leaflet-control-attribution a { color: var(--c-primary); }
+:root[data-theme='dark'] .leaflet-popup-content-wrapper,
+:root[data-theme='dark'] .leaflet-popup-tip { background: var(--c-elevated); color: var(--c-text); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
 
-/* Printable invoice */
+/* Printable invoice: always printed on white. */
 @media print {
+  :root, :root[data-theme='dark'] { --c-bg: #fff; --c-surface: #fff; --c-text: #000; }
   body * { visibility: hidden; }
   .print-area, .print-area * { visibility: visible; }
   .print-area { position: absolute; inset: 0; padding: 24px; }

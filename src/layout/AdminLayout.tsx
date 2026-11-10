@@ -1,13 +1,15 @@
 import {
-  DownOutlined, KeyOutlined, LogoutOutlined, MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined, UserOutlined,
+  BgColorsOutlined, CheckOutlined, DesktopOutlined, DownOutlined, KeyOutlined, LogoutOutlined, MenuFoldOutlined,
+  MenuOutlined, MenuUnfoldOutlined, MoonOutlined, SunOutlined,
 } from '@ant-design/icons';
-import { Avatar, Button, Drawer, Dropdown, Flex, Grid, Layout, Menu, Spin, Typography } from 'antd';
+import { Avatar, Button, Drawer, Dropdown, Flex, Grid, Layout, Menu, Spin, Tooltip, Typography } from 'antd';
 import type { MenuProps } from 'antd';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { GlobalSearch } from '../components/GlobalSearch';
 import { NotificationBell } from '../components/NotificationBell';
 import { useAuth } from '../lib/auth';
+import { useThemeMode, type ThemeMode } from '../lib/themeMode';
 import { NAV_GROUPS, navFor } from '../navigation';
 
 const { Sider, Header, Content } = Layout;
@@ -24,6 +26,7 @@ export function AdminLayout() {
   const screens = Grid.useBreakpoint();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(readCollapsed);
+  const { mode, dark, palette, setMode } = useThemeMode();
 
   useEffect(() => {
     try { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); } catch { /* storage unavailable */ }
@@ -76,16 +79,34 @@ export function AdminLayout() {
   );
 
   const roleNames = user.roles.map((r) => r.nameAr).join('، ');
+  const initial = user.name.trim().charAt(0).toUpperCase();
+  const MODES: { key: ThemeMode; label: string; icon: ReactNode }[] = [
+    { key: 'light', label: 'فاتح', icon: <SunOutlined /> },
+    { key: 'dark', label: 'داكن', icon: <MoonOutlined /> },
+    { key: 'system', label: 'حسب الجهاز', icon: <DesktopOutlined /> },
+  ];
   const userMenu: MenuProps = {
     items: [
-      { key: 'who', disabled: true, label: <div><div style={{ fontWeight: 700, color: '#1F2A37' }}>{user.name}</div><div style={{ fontSize: 12 }}>{roleNames}</div></div> },
+      {
+        key: 'who', disabled: true,
+        label: <div style={{ paddingBlock: 2 }}><div style={{ fontWeight: 700, color: 'var(--c-text)' }}>{user.name}</div><div style={{ fontSize: 12 }}>{roleNames}</div></div>,
+      },
       { type: 'divider' },
       { key: 'account', icon: <KeyOutlined />, label: 'حسابي وكلمة المرور' },
+      {
+        key: 'theme', icon: <BgColorsOutlined />, label: 'المظهر',
+        children: MODES.map((m) => ({
+          key: `theme:${m.key}`, icon: m.icon,
+          label: <Flex justify="space-between" gap={24}>{m.label}{mode === m.key && <CheckOutlined style={{ color: 'var(--c-primary)' }} />}</Flex>,
+        })),
+      },
+      { type: 'divider' },
       { key: 'logout', icon: <LogoutOutlined />, label: 'تسجيل الخروج', danger: true },
     ],
     onClick: ({ key }) => {
       if (key === 'account') navigate('/settings?tab=account');
       if (key === 'logout') void logout();
+      if (key.startsWith('theme:')) setMode(key.slice(6) as ThemeMode);
     },
   };
 
@@ -100,7 +121,7 @@ export function AdminLayout() {
           trigger={null}
           style={{
             position: 'sticky', top: 0, height: '100vh',
-            background: 'linear-gradient(180deg, #1D3D66 0%, #16304F 100%)',
+            background: palette.sider,
           }}
         >
           {sideContent}
@@ -112,41 +133,49 @@ export function AdminLayout() {
           placement="right"
           size={268}
           closable={false}
-          styles={{ body: { padding: 0, background: 'linear-gradient(180deg, #1D3D66 0%, #16304F 100%)' } }}
+          styles={{ body: { padding: 0, background: palette.sider } }}
           className="sider"
         >
           {sideContent}
         </Drawer>
       )}
       <Layout>
-        <Header
-          style={{
-            position: 'sticky', top: 0, zIndex: 10, display: 'flex', alignItems: 'center', gap: 12,
-            borderBottom: '1px solid #E6ECF3', paddingInline: screens.md ? 24 : 12,
-          }}
-        >
-          <Button
-            type="text"
-            aria-label={isDesktop ? (collapsed ? 'توسيع القائمة' : 'طي القائمة') : 'فتح القائمة'}
-            icon={!isDesktop ? <MenuOutlined /> : collapsed ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
-            onClick={() => (isDesktop ? setCollapsed((c) => !c) : setDrawerOpen(true))}
-          />
-          <div style={{ flex: 1, maxWidth: 460 }}>
+        <Header className="app-header" style={{ paddingInline: screens.md ? 24 : 12 }}>
+          <Tooltip title={isDesktop ? (collapsed ? 'توسيع القائمة' : 'طي القائمة') : undefined}>
+            <Button
+              type="text"
+              className="header-icon-btn"
+              aria-label={isDesktop ? (collapsed ? 'توسيع القائمة' : 'طي القائمة') : 'فتح القائمة'}
+              icon={!isDesktop ? <MenuOutlined /> : collapsed ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+              onClick={() => (isDesktop ? setCollapsed((c) => !c) : setDrawerOpen(true))}
+            />
+          </Tooltip>
+          <div style={{ flex: 1, maxWidth: 520, minWidth: 0 }}>
             <GlobalSearch />
           </div>
-          <Flex align="center" gap={8} style={{ marginInlineStart: 'auto' }}>
+          <Flex align="center" gap={4} style={{ marginInlineStart: 'auto' }}>
+            <Tooltip title={dark ? 'الوضع الفاتح' : 'الوضع الداكن'}>
+              <Button
+                type="text"
+                className="header-icon-btn"
+                aria-label={dark ? 'تفعيل الوضع الفاتح' : 'تفعيل الوضع الداكن'}
+                icon={dark ? <SunOutlined /> : <MoonOutlined />}
+                onClick={() => setMode(dark ? 'light' : 'dark')}
+              />
+            </Tooltip>
             <NotificationBell />
+            {screens.sm && <span className="header-divider" aria-hidden />}
             <Dropdown menu={userMenu} trigger={['click']} placement="bottomLeft">
-              <Button type="text" style={{ height: 44, paddingInline: 8 }} aria-label="قائمة المستخدم">
+              <Button type="text" className="header-user" aria-label="قائمة المستخدم">
                 <Flex align="center" gap={10}>
-                  <Avatar style={{ background: '#E8EFFA', color: '#2E508F', fontWeight: 700 }} icon={<UserOutlined />} />
+                  <Avatar size={36} className="header-avatar">{initial}</Avatar>
                   {screens.md && (
                     <div style={{ textAlign: 'start', lineHeight: 1.3 }}>
-                      <div style={{ fontWeight: 700 }}>{user.name}</div>
+                      <div style={{ fontWeight: 700, color: 'var(--c-text)' }}>{user.name}</div>
                       <Typography.Text type="secondary" style={{ fontSize: 12 }}>{roleNames}</Typography.Text>
                     </div>
                   )}
-                  <DownOutlined style={{ fontSize: 10, color: '#8A99AD' }} />
+                  <DownOutlined style={{ fontSize: 10, color: 'var(--c-subtle)' }} />
                 </Flex>
               </Button>
             </Dropdown>
