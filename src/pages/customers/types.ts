@@ -38,6 +38,8 @@ export interface CustomerDetail {
   loyaltyPoints: number;
   userId: number | null;
   createdAt: string;
+  /** The customer's login on the app (null until they sign up with their mobile). */
+  appAccount: { isActive: boolean; phone: string | null; lastLoginAt: string | null; createdAt: string; activeSessions: number } | null;
   addresses: Address[];
   devices: {
     id: number;
