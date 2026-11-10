@@ -268,7 +268,9 @@ function AssignPanel({ request, onDone }: { request: ServiceRequestDetail; onDon
               title: 'المنطقة',
               render: (_, t) => (
                 <Flex vertical gap={2}>
-                  {t.coversArea ? <Tag color="green" style={{ width: 'fit-content' }}>بيغطي {data.governorate}</Tag> : <Tag style={{ width: 'fit-content' }}>خارج محافظاته</Tag>}
+                  {t.coversExactArea ? <Tag color="green" style={{ width: 'fit-content' }}>بيغطي {data.area}</Tag>
+                    : t.coversArea ? <Tag color="cyan" style={{ width: 'fit-content' }}>بيغطي {data.governorate}</Tag>
+                    : <Tag style={{ width: 'fit-content' }}>خارج مناطقه</Tag>}
                   {t.serviceArea && <Typography.Text type="secondary" style={{ fontSize: 12 }}>{t.serviceArea}</Typography.Text>}
                 </Flex>
               ),
