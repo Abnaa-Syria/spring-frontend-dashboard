@@ -4,13 +4,13 @@ import { App, Button, Card, Checkbox, Col, Flex, Form, Input, Row, Skeleton, Swi
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageHeader } from '../../components/PageHeader';
 import { api, errorMessage } from '../../lib/api';
-import { EGYPT_GOVERNORATES } from '../../lib/governorates';
+import { useCoverage } from '../../lib/governorates';
 import { SPECIALIZATION, options, type Specialization } from '../../lib/labels';
 import { PHONE_RULE } from '../../lib/validation';
 
 interface Technician {
   id: number; code: string; name: string; username: string; phone: string | null; isActive: boolean;
-  isAvailable: boolean; serviceArea: string | null; governorates: string[]; specializations: Specialization[];
+  isAvailable: boolean; serviceArea: string | null; governorates: string[]; areaIds: number[]; specializations: Specialization[];
 }
 
 /** /technicians/new and /technicians/:id/edit */
@@ -21,6 +21,7 @@ export function TechnicianFormPage() {
   const { message } = App.useApp();
   const qc = useQueryClient();
   const [form] = Form.useForm();
+  const coverage = useCoverage();
 
   const { data: existing, isLoading } = useQuery({
     queryKey: ['technician', editId],
@@ -58,7 +59,7 @@ export function TechnicianFormPage() {
             layout="vertical"
             onFinish={save.mutate}
             initialValues={existing
-              ? { name: existing.name, phone: existing.phone ?? undefined, code: existing.code, serviceArea: existing.serviceArea ?? undefined, governorates: existing.governorates ?? [],
+              ? { name: existing.name, phone: existing.phone ?? undefined, code: existing.code, serviceArea: existing.serviceArea ?? undefined, governorates: existing.governorates ?? [], areaIds: existing.areaIds ?? [],
                   specializations: existing.specializations, isAvailable: existing.isAvailable, isActive: existing.isActive }
               : { specializations: [] }}
           >
@@ -95,8 +96,17 @@ export function TechnicianFormPage() {
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
-                <Form.Item name="governorates" label="المحافظات اللي بيغطيها" extra="الفنيين اللي بيغطّوا محافظة العميل بيظهروا الأول وقت التعيين">
-                  <Select mode="multiple" allowClear placeholder="اختر المحافظات" options={EGYPT_GOVERNORATES.map((g) => ({ value: g, label: g }))} optionFilterProp="label" />
+                <Form.Item name="governorates" label="محافظات بيغطيها بالكامل" extra="الفنيين اللي بيغطّوا محافظة العميل بيظهروا الأول وقت التعيين">
+                  <Select mode="multiple" allowClear placeholder="اختر المحافظات" loading={coverage.isLoading}
+                    options={(coverage.data?.governorates ?? []).map((g) => ({ value: g.name, label: g.name }))} optionFilterProp="label" />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item name="areaIds" label="مناطق محددة بيغطيها" extra="الفني اللي بيغطي منطقة العميل نفسها بيظهر قبل الكل">
+                  <Select mode="multiple" allowClear placeholder="اختر المناطق" loading={coverage.isLoading} optionFilterProp="label"
+                    options={(coverage.data?.governorates ?? []).filter((g) => g.areas.length).map((g) => ({
+                      label: g.name, title: g.name, options: g.areas.map((a) => ({ value: a.id, label: `${a.name} — ${g.name}` })),
+                    }))} />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>

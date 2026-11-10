@@ -48,9 +48,10 @@ export interface EligibleTechnicians {
   specialization: Specialization;
   day: string;
   governorate: string;
+  area: string | null;
   technicians: {
     id: number; code: string; name: string; phone: string | null; serviceArea: string | null;
-    governorates: string[]; coversArea: boolean;
+    governorates: string[]; coversArea: boolean; coversExactArea: boolean;
     specializations: Specialization[]; openTasks: number; tasksThatDay: number;
     scheduleThatDay: { number: string; scheduledAt: string; kind: ServiceKind }[];
   }[];

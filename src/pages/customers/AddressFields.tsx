@@ -1,7 +1,7 @@
-import { App, Col, Form, Input, Row, Select } from 'antd';
+import { App, AutoComplete, Col, Form, Input, Row, Select } from 'antd';
 import { LocationPicker, toLatLng, type LatLng } from '../../components/LocationMap';
 import { api, errorMessage } from '../../lib/api';
-import { EGYPT_GOVERNORATES } from '../../lib/governorates';
+import { useCoverage } from '../../lib/governorates';
 
 interface Reverse { governorate: string | null; city: string | null; area: string | null; street: string | null }
 
@@ -15,6 +15,9 @@ export function AddressFields({ prefix }: { prefix?: string }) {
   const lng = Form.useWatch(n('longitude'), form);
   const governorate = Form.useWatch(n('governorate'), form) as string | undefined;
   const point = toLatLng(lat, lng);
+  const coverage = useCoverage();
+  const names = (coverage.data?.governorates ?? []).map((g) => g.name);
+  const areas = coverage.data?.governorates.find((g) => g.name === governorate)?.areas ?? [];
 
   const setPoint = (p: LatLng | null) => {
     form.setFieldValue(n('latitude'), p ? Number(p.lat.toFixed(7)) : null);
@@ -37,18 +40,26 @@ export function AddressFields({ prefix }: { prefix?: string }) {
   };
 
   // Keeps a legacy free-text governorate selectable until it's corrected.
-  const options = [...EGYPT_GOVERNORATES, ...(governorate && !EGYPT_GOVERNORATES.includes(governorate) ? [governorate] : [])]
+  const options = [...names, ...(governorate && !names.includes(governorate) ? [governorate] : [])]
     .map((g) => ({ value: g, label: g }));
 
   return (
     <Row gutter={12}>
       <Col xs={12} md={8}>
         <Form.Item name={n('governorate')} label="المحافظة" rules={req}>
-          <Select showSearch options={options} placeholder="اختر المحافظة" optionFilterProp="label" />
+          <Select showSearch options={options} loading={coverage.isLoading} placeholder="اختر المحافظة" optionFilterProp="label" />
         </Form.Item>
       </Col>
       <Col xs={12} md={8}><Form.Item name={n('city')} label="المدينة / الحي" rules={req}><Input /></Form.Item></Col>
-      <Col xs={24} md={8}><Form.Item name={n('area')} label="المنطقة"><Input /></Form.Item></Col>
+      <Col xs={24} md={8}>
+        <Form.Item name={n('area')} label="المنطقة" extra={areas.length ? 'اختار من مناطق المحافظة أو اكتب منطقة جديدة' : undefined}>
+          <AutoComplete
+            options={areas.map((a) => ({ value: a.name, label: a.serviceEnabled ? a.name : `${a.name} (خارج التغطية)` }))}
+            filterOption={(input, o) => String(o?.value ?? '').includes(input)}
+            placeholder={areas.length ? 'اختر المنطقة' : undefined}
+          />
+        </Form.Item>
+      </Col>
       <Col xs={24} md={12}><Form.Item name={n('street')} label="الشارع"><Input /></Form.Item></Col>
       <Col xs={8} md={4}><Form.Item name={n('building')} label="العقار"><Input /></Form.Item></Col>
       <Col xs={8} md={4}><Form.Item name={n('floor')} label="الدور"><Input /></Form.Item></Col>
