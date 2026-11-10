@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { App as AntApp, ConfigProvider } from 'antd';
+import { App as AntApp } from 'antd';
 import arEG from 'antd/locale/ar_EG';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ar';
@@ -8,8 +8,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AdminLayout } from './layout/AdminLayout';
 import { AuthProvider } from './lib/auth';
+import { ThemeModeProvider } from './lib/themeMode';
 import { LoginPage } from './pages/LoginPage';
-import { theme } from './theme';
 import './index.css';
 
 // Each page is its own chunk, so the first load only pulls the layout and the current page.
@@ -55,7 +55,7 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConfigProvider direction="rtl" locale={arEG} theme={theme}>
+    <ThemeModeProvider locale={arEG}>
       <AntApp style={{ height: '100%' }}>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
@@ -107,6 +107,6 @@ createRoot(document.getElementById('root')!).render(
           </AuthProvider>
         </QueryClientProvider>
       </AntApp>
-    </ConfigProvider>
+    </ThemeModeProvider>
   </StrictMode>,
 );

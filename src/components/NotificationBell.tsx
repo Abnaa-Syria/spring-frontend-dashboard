@@ -63,7 +63,7 @@ export function NotificationBell() {
                 padding: '8px 10px',
                 borderRadius: 8,
                 cursor: 'pointer',
-                background: n.readAt ? 'transparent' : 'var(--ant-color-primary-bg, #eef3fb)',
+                background: n.readAt ? 'transparent' : 'var(--c-unread)',
                 opacity: n.readAt ? 0.7 : 1,
               }}
             >
@@ -91,8 +91,8 @@ export function NotificationBell() {
       }
       content={content}
     >
-      <Badge count={data?.unread} size="small">
-        <Button type="text" icon={<BellOutlined />} aria-label="الإشعارات" />
+      <Badge count={data?.unread} size="small" offset={[-6, 6]}>
+        <Button type="text" className="header-icon-btn" icon={<BellOutlined />} aria-label="الإشعارات" />
       </Badge>
     </Popover>
   );

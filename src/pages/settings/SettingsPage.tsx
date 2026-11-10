@@ -51,7 +51,7 @@ function AccountTab() {
     <Row gutter={[24, 24]}>
       <Col xs={24} lg={10}>
         <Flex gap={16} align="center" style={{ marginBottom: 16 }}>
-          <Avatar size={56} icon={<UserOutlined />} style={{ background: '#E8EFFA', color: '#2E508F' }} />
+          <Avatar size={56} icon={<UserOutlined />} style={{ background: 'var(--tone-blue-bg)', color: 'var(--tone-blue-fg)' }} />
           <div>
             <Typography.Title level={5} style={{ margin: 0 }}>{user.name}</Typography.Title>
             <Flex gap={4} wrap>{user.roles.map((r) => <Tag key={r.code} color="blue">{r.nameAr}</Tag>)}</Flex>

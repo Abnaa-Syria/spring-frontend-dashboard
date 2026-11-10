@@ -16,6 +16,7 @@ import { PageHeader } from '../components/PageHeader';
 import { StatCard, TONES, pctChange, type Tone } from '../components/StatCard';
 import { api } from '../lib/api';
 import { useAuth } from '../lib/auth';
+import { useThemeMode } from '../lib/themeMode';
 import { fmtMoney, fmtNumber } from '../lib/format';
 import { PRIORITY, SERVICE_KIND, SERVICE_STATUS, type ServiceKind, type ServicePriority, type ServiceStatus } from '../lib/labels';
 
@@ -40,9 +41,6 @@ interface Overview {
   technicians: { id: number; name: string; state: 'OFF' | 'BUSY' | 'FREE'; visitsToday: number }[];
 }
 
-const C1 = '#2E508F';
-const C2 = '#42B8C8';
-const AXIS = { fontSize: 12, fill: '#8A99AD', fontFamily: 'Cairo' };
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -53,6 +51,10 @@ export function HomePage() {
   const { user, can } = useAuth();
   const navigate = useNavigate();
   const [chart, setChart] = useState<'requests' | 'revenue'>('requests');
+  const { palette: pal } = useThemeMode();
+  const C1 = pal.primary;
+  const C2 = pal.accent;
+  const AXIS = { fontSize: 12, fill: pal.subtle, fontFamily: 'Cairo' };
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: async () => (await api.get<Overview>('/dashboard/overview')).data,
@@ -102,14 +104,14 @@ export function HomePage() {
         <Col xs={24} sm={12} xl={showRevenue ? 6 : 8}>
           <StatCard
             loading={isLoading} tone="teal" icon={<CalendarOutlined />} label="زيارات اليوم"
-            value={<>{fmtNumber(k?.completedToday ?? 0)}<span style={{ fontSize: 16, color: '#8A99AD', fontWeight: 600 }}> / {fmtNumber(k?.visitsToday ?? 0)}</span></>}
+            value={<>{fmtNumber(k?.completedToday ?? 0)}<span style={{ fontSize: 16, color: 'var(--c-subtle)', fontWeight: 600 }}> / {fmtNumber(k?.visitsToday ?? 0)}</span></>}
             hint="مكتملة من المجدولة"
           />
         </Col>
         <Col xs={24} sm={12} xl={showRevenue ? 6 : 8}>
           <StatCard
             loading={isLoading} tone="orange" icon={<StarOutlined />} label="تقييم العملاء (30 يوم)"
-            value={k?.avgRating30d != null ? <>{k.avgRating30d.toFixed(1)}<span style={{ fontSize: 16, color: '#8A99AD', fontWeight: 600 }}> / 5</span></> : '—'}
+            value={k?.avgRating30d != null ? <>{k.avgRating30d.toFixed(1)}<span style={{ fontSize: 16, color: 'var(--c-subtle)', fontWeight: 600 }}> / 5</span></> : '—'}
             hint={`${fmtNumber(k?.ratings30d ?? 0)} تقييم · ${fmtNumber(k?.newCustomersMonth ?? 0)} عميل جديد هذا الشهر`}
           />
         </Col>
@@ -135,23 +137,23 @@ export function HomePage() {
                 <ResponsiveContainer>
                   {chart === 'requests' ? (
                     <LineChart data={series} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                      <CartesianGrid stroke="#EEF2F7" vertical={false} />
+                      <CartesianGrid stroke={pal.grid} vertical={false} />
                       <XAxis dataKey="label" tick={AXIS} axisLine={false} tickLine={false} reversed />
                       <YAxis tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} orientation="right" />
-                      <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#C7D3E3' }} />
+                      <Tooltip content={<ChartTooltip />} cursor={{ stroke: pal.cursor }} />
                       <Legend content={<ChartLegend />} />
-                      <Line type="monotone" dataKey="created" name="طلبات جديدة" stroke={C1} strokeWidth={2} dot={false} animationDuration={500} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }} />
-                      <Line type="monotone" dataKey="completed" name="مكتملة" stroke={C2} strokeWidth={2} dot={false} animationDuration={500} activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }} />
+                      <Line type="monotone" dataKey="created" name="طلبات جديدة" stroke={C1} strokeWidth={2} dot={false} animationDuration={500} activeDot={{ r: 5, strokeWidth: 2, stroke: pal.surface }} />
+                      <Line type="monotone" dataKey="completed" name="مكتملة" stroke={C2} strokeWidth={2} dot={false} animationDuration={500} activeDot={{ r: 5, strokeWidth: 2, stroke: pal.surface }} />
                     </LineChart>
                   ) : (
                     <BarChart data={series} margin={{ top: 8, right: 8, left: 8, bottom: 0 }} barCategoryGap="30%">
-                      <CartesianGrid stroke="#EEF2F7" vertical={false} />
+                      <CartesianGrid stroke={pal.grid} vertical={false} />
                       <XAxis dataKey="label" tick={AXIS} axisLine={false} tickLine={false} reversed />
                       <YAxis tick={AXIS} axisLine={false} tickLine={false} orientation="right" tickFormatter={(v: number) => fmtNumber(v)} />
-                      <Tooltip content={<ChartTooltip money />} cursor={{ fill: '#F4F8FD' }} />
+                      <Tooltip content={<ChartTooltip money />} cursor={{ fill: pal.hover }} />
                       <Legend content={<ChartLegend />} />
-                      <Bar dataKey="visits" name="زيارات" stackId="r" fill={C1} stroke="#fff" strokeWidth={1} animationDuration={500} />
-                      <Bar dataKey="orders" name="المتجر" stackId="r" fill={C2} stroke="#fff" strokeWidth={1} radius={[4, 4, 0, 0]} animationDuration={500} />
+                      <Bar dataKey="visits" name="زيارات" stackId="r" fill={C1} stroke={pal.surface} strokeWidth={1} animationDuration={500} />
+                      <Bar dataKey="orders" name="المتجر" stackId="r" fill={C2} stroke={pal.surface} strokeWidth={1} radius={[4, 4, 0, 0]} animationDuration={500} />
                     </BarChart>
                   )}
                 </ResponsiveContainer>
@@ -190,7 +192,7 @@ export function HomePage() {
                     </div>
                     <div style={{ textAlign: 'end', flexShrink: 0 }}>
                       <EnumTag map={SERVICE_STATUS} value={r.status} />
-                      <div style={{ fontSize: 12, color: r.technician ? '#5B6B80' : '#D92D20', marginTop: 2 }}>
+                      <div style={{ fontSize: 12, color: r.technician ? 'var(--c-muted)' : 'var(--c-danger)', marginTop: 2 }}>
                         {r.technician?.user.name ?? 'بدون فني'}
                       </div>
                     </div>
@@ -214,12 +216,12 @@ function ChartTooltip({ active, payload, label, money }: {
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: '#fff', border: '1px solid #E6ECF3', borderRadius: 10, padding: '8px 12px', boxShadow: '0 6px 16px rgba(16,40,80,.08)', direction: 'rtl', fontFamily: 'Cairo' }}>
+    <div style={{ background: 'var(--c-elevated)', color: 'var(--c-text)', border: '1px solid var(--c-border)', borderRadius: 10, padding: '8px 12px', boxShadow: 'var(--c-popup-shadow)', direction: 'rtl', fontFamily: 'Cairo' }}>
       <div style={{ fontWeight: 700, marginBottom: 4 }}>{label}</div>
       {payload.map((p) => (
         <Flex key={p.name} gap={8} align="center" style={{ fontSize: 13 }}>
           <span style={{ width: 10, height: 10, borderRadius: 3, background: p.color }} />
-          <span style={{ color: '#5B6B80' }}>{p.name}:</span>
+          <span style={{ color: 'var(--c-muted)' }}>{p.name}:</span>
           <b>{money ? fmtMoney(p.value) : fmtNumber(p.value)}</b>
         </Flex>
       ))}
@@ -229,7 +231,7 @@ function ChartTooltip({ active, payload, label, money }: {
 
 function ChartLegend({ payload }: { payload?: { value: string; color: string }[] }) {
   return (
-    <Flex gap={16} justify="center" style={{ direction: 'rtl', fontSize: 13, color: '#5B6B80', marginTop: 4 }}>
+    <Flex gap={16} justify="center" style={{ direction: 'rtl', fontSize: 13, color: 'var(--c-muted)', marginTop: 4 }}>
       {payload?.map((p) => (
         <Flex key={p.value} gap={6} align="center">
           <span style={{ width: 10, height: 10, borderRadius: 3, background: p.color }} />{p.value}
@@ -256,7 +258,7 @@ function ActionCenter({ data, loading }: { data?: Overview['actions']; loading: 
   const clear = rows.filter((r) => r.count === 0);
 
   return (
-    <Card title={<Flex gap={8} align="center">محتاج إجراء{pending.length > 0 && <Badge count={pending.length} color="#D92D20" />}</Flex>} style={{ height: '100%' }}>
+    <Card title={<Flex gap={8} align="center">محتاج إجراء{pending.length > 0 && <Badge count={pending.length} color="var(--c-danger)" />}</Flex>} style={{ height: '100%' }}>
       {loading ? <Skeleton active /> : (
         <Flex vertical>
           {pending.map((r) => (
@@ -268,18 +270,18 @@ function ActionCenter({ data, loading }: { data?: Overview['actions']; loading: 
                 {r.sub && <Typography.Text type="secondary" style={{ fontSize: 12 }}>{r.sub}</Typography.Text>}
               </div>
               <Typography.Text strong style={{ fontSize: 18 }}>{fmtNumber(r.count)}</Typography.Text>
-              <LeftOutlined style={{ color: '#C7D3E3', fontSize: 12 }} aria-hidden />
+              <LeftOutlined style={{ color: 'var(--c-faint)', fontSize: 12 }} aria-hidden />
             </div>
           ))}
           {!pending.length && (
-            <Flex vertical align="center" gap={6} style={{ padding: '24px 0', color: '#12A150' }}>
+            <Flex vertical align="center" gap={6} style={{ padding: '24px 0', color: 'var(--c-success)' }}>
               <CheckCircleOutlined style={{ fontSize: 32 }} />
               <Typography.Text strong>مفيش حاجة متأخرة</Typography.Text>
             </Flex>
           )}
           {clear.length > 0 && pending.length > 0 && (
             <Typography.Text type="secondary" style={{ fontSize: 12, marginTop: 8 }}>
-              <CheckCircleOutlined style={{ color: '#12A150' }} /> لا يوجد: {clear.map((r) => r.label).join('، ')}
+              <CheckCircleOutlined style={{ color: 'var(--c-success)' }} /> لا يوجد: {clear.map((r) => r.label).join('، ')}
             </Typography.Text>
           )}
         </Flex>

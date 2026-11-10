@@ -35,7 +35,7 @@ interface Overview {
   handovers: { id: number; amount: string; status: HandoverStatus; note: string | null; createdAt: string }[];
 }
 
-const stars = (n: number | null) => (n == null ? '—' : <span style={{ color: '#D97706' }} aria-label={`${n} من 5`}>{'★'.repeat(n)}<span style={{ color: '#D9E1EB' }}>{'★'.repeat(5 - n)}</span></span>);
+const stars = (n: number | null) => (n == null ? '—' : <span style={{ color: 'var(--c-warning)' }} aria-label={`${n} من 5`}>{'★'.repeat(n)}<span style={{ color: 'var(--c-border-strong)' }}>{'★'.repeat(5 - n)}</span></span>);
 
 export function TechnicianDetailPage() {
   const id = Number(useParams().id);
@@ -76,7 +76,7 @@ export function TechnicianDetailPage() {
       <Card style={{ marginBottom: 16 }}>
         <Flex gap={20} wrap align="center">
           <Badge dot status={!t.isActive ? 'error' : t.isAvailable ? 'success' : 'default'} offset={[-6, 54]}>
-            <Avatar size={64} style={{ background: '#E3F5F8', color: '#1E8A9B', fontSize: 26, fontWeight: 800 }}>{t.name.trim().charAt(0)}</Avatar>
+            <Avatar size={64} style={{ background: 'var(--tone-teal-bg)', color: 'var(--tone-teal-fg)', fontSize: 26, fontWeight: 800 }}>{t.name.trim().charAt(0)}</Avatar>
           </Badge>
           <Flex vertical gap={6} style={{ flex: 1, minWidth: 240 }}>
             <Flex gap={8} wrap align="center">
@@ -84,7 +84,7 @@ export function TechnicianDetailPage() {
               <Tag>{t.code}</Tag>
               {!t.isActive ? <Tag color="red">موقوف</Tag> : t.isAvailable ? <Tag color="green">متاح</Tag> : <Tag color="orange">غير متاح</Tag>}
             </Flex>
-            <Flex gap={20} wrap style={{ color: '#5B6B80' }} align="center">
+            <Flex gap={20} wrap style={{ color: 'var(--c-muted)' }} align="center">
               {t.phone && <span><PhoneOutlined /> <bdi dir="ltr">{t.phone}</bdi></span>}
               <span>اسم المستخدم: <bdi dir="ltr">{t.username}</bdi></span>
               {t.serviceArea && <span>المنطقة: {t.serviceArea}</span>}

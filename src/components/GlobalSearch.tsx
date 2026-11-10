@@ -1,7 +1,7 @@
 import { FileTextOutlined, SearchOutlined, ShoppingCartOutlined, ToolOutlined, UserOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { AutoComplete, Flex, Input, Typography } from 'antd';
-import { useEffect, useState, type ReactNode } from 'react';
+import { AutoComplete, Flex, Grid, Input, Spin, Typography } from 'antd';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { fmtMoney } from '../lib/format';
@@ -25,7 +25,7 @@ function useDebounced<T>(value: T, ms = 300) {
 
 const row = (icon: ReactNode, title: ReactNode, sub: ReactNode) => (
   <Flex align="center" gap={10}>
-    <span style={{ color: '#5B6B80' }} aria-hidden>{icon}</span>
+    <span className="kpi-icon" style={{ width: 32, height: 32, fontSize: 15, borderRadius: 9, background: 'var(--tone-blue-bg)', color: 'var(--tone-blue-fg)' }} aria-hidden>{icon}</span>
     <div style={{ minWidth: 0 }}>
       <div style={{ fontWeight: 600 }}>{title}</div>
       <Typography.Text type="secondary" style={{ fontSize: 12 }}>{sub}</Typography.Text>
@@ -37,6 +37,24 @@ const row = (icon: ReactNode, title: ReactNode, sub: ReactNode) => (
 export function GlobalSearch() {
   const navigate = useNavigate();
   const [text, setText] = useState('');
+  const [focused, setFocused] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const screens = Grid.useBreakpoint();
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
+
+  // Ctrl/⌘ + K or "/" jumps to the search from anywhere (not while typing in another field).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      const typing = el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName);
+      if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') || (e.key === '/' && !typing)) {
+        e.preventDefault();
+        box.current?.querySelector('input')?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const q = useDebounced(text.trim());
   const { data, isFetching } = useQuery({
     queryKey: ['search', q],
@@ -72,25 +90,33 @@ export function GlobalSearch() {
 
   const empty = q.length >= 2 && data && !options.length;
 
+  const hint = !text && !focused && screens.md
+    ? <span className="kbd" aria-hidden>{isMac ? '⌘' : 'Ctrl'} K</span>
+    : null;
+
   return (
-    <AutoComplete
-      value={text}
-      onChange={setText}
-      options={options}
-      onSelect={(to: string) => { setText(''); navigate(to); }}
-      notFoundContent={empty ? 'لا توجد نتائج' : null}
-      style={{ width: '100%' }}
-      popupMatchSelectWidth={420}
-      listHeight={440}
-    >
-      <Input
-        allowClear
-        prefix={<SearchOutlined style={{ color: '#8A99AD' }} />}
-        suffix={isFetching ? <Typography.Text type="secondary" style={{ fontSize: 12 }}>...</Typography.Text> : null}
-        placeholder="ابحث برقم الطلب أو الفاتورة أو اسم/موبايل العميل"
-        aria-label="بحث شامل"
-        style={{ background: '#F4F7FB', borderColor: 'transparent' }}
-      />
-    </AutoComplete>
+    <div ref={box}>
+      <AutoComplete
+        className="global-search"
+        value={text}
+        onChange={setText}
+        options={options}
+        onSelect={(to: string) => { setText(''); navigate(to); }}
+        notFoundContent={empty ? 'لا توجد نتائج' : null}
+        style={{ width: '100%' }}
+        popupMatchSelectWidth={420}
+        listHeight={440}
+      >
+        <Input
+          allowClear
+          prefix={<SearchOutlined className="search-icon" />}
+          suffix={isFetching ? <Spin size="small" /> : hint}
+          placeholder={screens.sm ? 'ابحث برقم طلب أو فاتورة، أو باسم أو موبايل عميل' : 'بحث...'}
+          aria-label="بحث شامل"
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+        />
+      </AutoComplete>
+    </div>
   );
 }

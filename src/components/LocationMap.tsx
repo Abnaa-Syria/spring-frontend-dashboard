@@ -77,7 +77,7 @@ export function LocationPicker({ value, onChange, onFillAddress, height = 300 }:
 
   return (
     <Flex vertical gap={8}>
-      <div dir="ltr" style={{ height, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--ant-color-border, #e5e7eb)' }}>
+      <div dir="ltr" style={{ height, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)' }}>
         <MapContainer center={value ?? CAIRO} zoom={value ? 16 : 11} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
           {tiles}
           <ClickToPlace onPick={onChange} />
@@ -109,7 +109,7 @@ export function LocationPicker({ value, onChange, onFillAddress, height = 300 }:
 export function LocationView({ point, height = 220 }: { point: LatLng; height?: number }) {
   return (
     <Flex vertical gap={8}>
-      <div dir="ltr" style={{ height, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--ant-color-border, #e5e7eb)' }}>
+      <div dir="ltr" style={{ height, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--c-border)' }}>
         <MapContainer center={point} zoom={16} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
           {tiles}
           <Recenter to={point} zoom={16} />

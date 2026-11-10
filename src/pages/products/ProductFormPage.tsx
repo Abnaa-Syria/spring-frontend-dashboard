@@ -279,7 +279,7 @@ function StockPanel({ productId }: { productId: number }) {
       {stock.isLoading || !s ? <Skeleton active paragraph={{ rows: 3 }} /> : (
         <Flex vertical gap={12}>
           <Row gutter={8}>
-            <Col span={8}><Statistic title="المخزن الرئيسي" value={s.main} styles={{ content: { color: low ? '#D92D20' : undefined } }} /></Col>
+            <Col span={8}><Statistic title="المخزن الرئيسي" value={s.main} styles={{ content: { color: low ? 'var(--c-danger)' : undefined } }} /></Col>
             <Col span={8}><Statistic title="عهد الفنيين" value={s.custody} /></Col>
             <Col span={8}><Statistic title="الإجمالي" value={s.total} /></Col>
           </Row>

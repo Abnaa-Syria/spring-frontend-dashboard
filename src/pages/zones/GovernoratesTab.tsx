@@ -143,6 +143,7 @@ function AreasPanel({ gov, stats, editable, refresh }: { gov: Governorate; stats
             },
             {
               title: '',
+              width: 56,
               render: (_, a) => editable && (
                 <Popconfirm
                   title="مسح المنطقة؟"
@@ -250,7 +251,7 @@ export function GovernoratesTab() {
         size="middle"
         dataSource={filtered}
         pagination={false}
-        scroll={{ x: 1150 }}
+        scroll={{ x: 1220 }}
         rowClassName={(r) => (changed.includes(r.id) ? 'ant-table-row-selected' : '')}
         expandable={{
           expandRowByClick: false,
@@ -301,6 +302,7 @@ export function GovernoratesTab() {
           },
           {
             title: '',
+            width: 56,
             render: (_, r) => editable && (
               <Popconfirm
                 title="مسح المحافظة؟"
